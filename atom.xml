@@ -4,7 +4,7 @@
   <title><![CDATA[lvpw’s Blog]]></title>
   <link href="http://devlvpw.github.io/atom.xml" rel="self"/>
   <link href="http://devlvpw.github.io/"/>
-  <updated>2014-03-10T18:28:09+08:00</updated>
+  <updated>2014-03-10T19:35:42+08:00</updated>
   <id>http://devlvpw.github.io/</id>
   <author>
     <name><![CDATA[lvpw]]></name>
@@ -31,7 +31,7 @@
 <blockquote><p><strong>NOTE:</strong></p>
 
 <ul>
-<li>在添加之前，在分支中commit所做的修改，然后切换到master中pull下最新的项目</li>
+<li>在添加之前，在分支中commit所做的修改，然后切换到master中pull下最新的项目(project.pbxproj有改变的话会导致冲突，可把本地项目中的这个文件先拉到桌面，然后再poll)</li>
 <li>开始添加或删除文件</li>
 <li>push到服务器(包括工程文件project.pbxproj和添加或删除的文件)<br/>
 然后其他队员也要进行添加或删除操作时，进行同样的步骤</li>
