@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[lvpw’s Blog]]></title>
+  <link href="http://devlvpw.github.io/atom.xml" rel="self"/>
+  <link href="http://devlvpw.github.io/"/>
+  <updated>2014-03-03T15:54:53+08:00</updated>
+  <id>http://devlvpw.github.io/</id>
+  <author>
+    <name><![CDATA[lvpw]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[我的第一篇博客]]></title>
+    <link href="http://devlvpw.github.io/blog/2014/03/02/my-first-blog/"/>
+    <updated>2014-03-02T15:24:36+08:00</updated>
+    <id>http://devlvpw.github.io/blog/2014/03/02/my-first-blog</id>
+    <content type="html"><![CDATA[<p><strong>首先介绍一下blog搭建历程。</strong></p>
+
+<p>博客管理工具：<a href="octopress.org">octopress</a></p>
+
+<p>当然第一步你得先安装并了解Git. (<a href="http://git-scm.com/">Install Git</a>)</p>
+
+<p>首先要安装<strong>ruby</strong>，当初我是通过rvm来安装，后来出现了一堆麻烦，所以就放弃了这条路，改为HomeBrew->rbenv->ruby。基本不需要配置环境。</p>
+
+<p>1.<a href="http://brew.sh/index_zh-cn.html">安装Homebrew</a>
+2.<a href="http://octopress.org/docs/setup/rbenv/">安装rbenv</a>：Alternate Installation Using Homebrew<br/>
+3.<a href="http://octopress.org/docs/setup/rbenv/">安装Ruby</a>：Install Ruby 1.9.3</p>
+
+<pre><code>ruby --version //查看ruby版本
+</code></pre>
+
+<p><strong>安装Octopress</strong></p>
+
+<pre><code>git clone git://github.com/imathis/octopress.git octopress
+cd octopress  
+</code></pre>
+
+<p>然后安装依赖</p>
+
+<pre><code>gem install bundler
+rbenv rehash    # If you use rbenv, rehash to be able to run the bundle command
+bundle install
+</code></pre>
+
+<p>最后安装Octopress</p>
+
+<pre><code>rake install
+</code></pre>
+
+<p>简单配置：主要修改_config.yml，这个配置文件都有相应的注释。主要就是改一些博客头，作者名之类的东西。 注意最好把里面的twitter相关的信息全部删掉，否则由于GFW的原因，将会造成页面load很慢。(from <a href="http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/">唐巧</a>)</p>
+
+<p><strong>写博客方法</strong></p>
+
+<ul>
+<li>rake new_post[‘article name’] 生成博文框架，然后修改生成的文件即可</li>
+<li>rake generate 生成静态文件</li>
+<li>rake preview 在本机4000端口生成访问内容</li>
+<li>rake deploy 发布文件</li>
+</ul>
+
+
+<p>博客内容是采用markdown语法，所以需要熟悉一下常用的标签。我用的是Google Chrome的插件&mdash;Minimalist Markdown Editor</p>
+
+<p><strong>高级配置还没有测试，下次更新！</strong></p>
+
+<p><strong>参考</strong></p>
+
+<ul>
+<li><a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a></li>
+<li><a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a></li>
+<li><a href="http://beyondvincent.com/blog/2013/08/03/108-creating-a-github-blog-using-octopress/">破船之家</a></li>
+<li><a href="http://shanewfx.github.io/blog/2012/02/16/bulid-blog-by-octopress/">思考的轨迹</a></li>
+<li><a href="http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/">唐巧的技术博客</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>
