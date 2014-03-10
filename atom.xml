@@ -4,7 +4,7 @@
   <title><![CDATA[lvpw’s Blog]]></title>
   <link href="http://devlvpw.github.io/atom.xml" rel="self"/>
   <link href="http://devlvpw.github.io/"/>
-  <updated>2014-03-03T15:54:53+08:00</updated>
+  <updated>2014-03-10T18:18:06+08:00</updated>
   <id>http://devlvpw.github.io/</id>
   <author>
     <name><![CDATA[lvpw]]></name>
@@ -12,6 +12,44 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Learn Git]]></title>
+    <link href="http://devlvpw.github.io/blog/2014/03/10/learn-git/"/>
+    <updated>2014-03-10T17:55:47+08:00</updated>
+    <id>http://devlvpw.github.io/blog/2014/03/10/learn-git</id>
+    <content type="html"><![CDATA[<h1>学习git之后的总结(心得)</h1>
+
+<p>之前骊住项目管理是用svn，后来服务器中项目丢失，导致svn无法再进行管理项目，又通过github发现git的强大。于是用了2天时间自学git基础，之后断断续续用了一周时间去实践搭建git服务器。</p>
+
+<hr />
+
+<h2>git心得(注意事项)</h2>
+
+<p>1.添加删除文件：一个团队中，若某个队员要添加或删除一些文件，操作如下</p>
+
+<blockquote><p><strong>NOTE:</strong></p>
+
+<ul>
+<li>在添加之前，在分支中commit所做的修改，然后切换到master中pull下最新的项目</li>
+<li>开始添加或删除文件</li>
+<li>push到服务器(包括工程文件project.pbxproj和添加或删除的文件)
+                          然后其他队员也要进行添加或删除操作时，进行同样的步骤</li>
+</ul>
+</blockquote>
+
+<p>2.尽量多建分支(branch)<br/>
+3.把一次功能修改的文件分多次提交(主要是为了更加详细，清楚都进行了哪些操作)  这个是在代码中注释的另一种体现</p>
+
+<h2>后记</h2>
+
+<p>git 标准<a href="http://www.gitignore.io/api/xcode,objective-c">gitignore</a>文件(for iOS project)
+git 常见冲突 <a href="http://www.shanhh.com/blog/2013/01/30/git_FAQ/">解决方案</a><br/>
+git 参考教程 :<br/>
+<a href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000/0013744142037508cf42e51debf49668810645e02887691000">Git教程 &ndash; 廖雪峰的官方网站</a><br/>
+<a href="http://git-scm.com/book/zh/%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E7%9A%84-Git-%E6%9E%B6%E8%AE%BE%E6%9C%8D%E5%8A%A1%E5%99%A8">Git &ndash; 架设服务器</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[我的第一篇博客]]></title>
