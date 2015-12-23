@@ -4,7 +4,7 @@
   <title><![CDATA[lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2015-12-23T10:03:38+08:00</updated>
+  <updated>2015-12-23T10:22:23+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -12,6 +12,39 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[iOS错误日志分析]]></title>
+    <link href="http://lvpengwei.github.io//blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/"/>
+    <updated>2015-12-23T10:20:55+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi</id>
+    <content type="html"><![CDATA[<p>穿衣助手iOS使用umeng来做错误日志统计，下面介绍一下如何通过lldb和错误日志定位崩溃位置。</p>
+
+<!--more-->
+
+
+<p>1.首先，启一个终端，输入<code>lldb</code>，回车。进入lldb模式。如图
+<img src="http://blog.yourdream.cc/usr/uploads/2015/03/1979910195.png" alt="F91A0BB9-84B4-4BAE-8F11-FF937DEF0CC0.png" /></p>
+
+<p>2.输入<code>target create --no-dependents --arch armv7 'path'</code>，此处path是指可执行文件CYZS的位置，路径大概是<code>~/CYZS\ 1-27-15,\ 9.49\ AM.xcarchive/dSYMs/CYZS.app.dSYM/Contents/Resources/DWARF/CYZS</code>,armv7根据错误日志所记录进行改变，执行即可，如图
+<img src="http://blog.yourdream.cc/usr/uploads/2015/03/2077915295.png" alt="DC2A5FFA-6CE8-4EC2-B189-BB26BADE3A2B.png" /></p>
+
+<p>3.使用<code>image lookup --address '地址'</code>进行定位。umeng日志如图:
+<img src="http://blog.yourdream.cc/usr/uploads/2015/03/4132646907.png" alt="1E31F2DA-9035-4C3C-BCF0-CC0DF28C4502.png" /></p>
+
+<p>然后复制那些前面标有我们APP名称的地址
+<img src="http://blog.yourdream.cc/usr/uploads/2015/03/1195208596.png" alt="407AAE6A-E111-4171-92A8-32BF1F461881.png" /></p>
+
+<p>Update : 2015-04-23
+umeng中64位crash的log中发现slide address跟以前的不一样，所以不能正确的定位crash的地址。
+解决方法是在第二步之后输入<code>image list</code>看是否有与umeng中一致的地址，若没有则输入<code>target modules load --file 'path' __TEXT 0x429496729616</code>重设即可。</p>
+
+<p><img src="http://blog.yourdream.cc/usr/uploads/2015/04/612599683.png" alt="asdfasdfa.png" /></p>
+
+<p>参照
+<a href="http://lldb.llvm.org/symbolication.html">The LLDB Debugger</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[Learn Git]]></title>
