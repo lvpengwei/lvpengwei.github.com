@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom">
 
-  <title><![CDATA[lvpw’s Blog]]></title>
-  <link href="http://devlvpw.github.io/atom.xml" rel="self"/>
-  <link href="http://devlvpw.github.io/"/>
-  <updated>2014-05-15T13:44:58+08:00</updated>
-  <id>http://devlvpw.github.io/</id>
+  <title><![CDATA[lvpengwei’s Blog]]></title>
+  <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
+  <link href="http://lvpengwei.github.io//"/>
+  <updated>2015-12-23T10:03:38+08:00</updated>
+  <id>http://lvpengwei.github.io//</id>
   <author>
-    <name><![CDATA[lvpw]]></name>
+    <name><![CDATA[lvpengwei]]></name>
     
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Learn Git]]></title>
-    <link href="http://devlvpw.github.io/blog/2014/03/10/learn-git/"/>
+    <link href="http://lvpengwei.github.io//blog/2014/03/10/learn-git/"/>
     <updated>2014-03-10T17:55:47+08:00</updated>
-    <id>http://devlvpw.github.io/blog/2014/03/10/learn-git</id>
+    <id>http://lvpengwei.github.io//blog/2014/03/10/learn-git</id>
     <content type="html"><![CDATA[<h1>学习git之后的总结(心得)</h1>
 
 <p>之前骊住项目管理是用svn，后来服务器中项目丢失，导致svn无法再进行管理项目，又通过github发现git的强大。于是用了2天时间自学git基础，之后断断续续用了一周时间去实践搭建git服务器。</p>
@@ -54,16 +54,16 @@
 <p>git 标准<a href="http://www.gitignore.io/api/xcode,objective-c">gitignore</a>文件(for iOS project)
 git 常见冲突 <a href="http://www.shanhh.com/blog/2013/01/30/git_FAQ/">解决方案</a><br/>
 git 参考教程 :<br/>
-<a href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000/0013744142037508cf42e51debf49668810645e02887691000">Git教程 &ndash; 廖雪峰的官方网站</a><br/>
-<a href="http://git-scm.com/book/zh/%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E7%9A%84-Git-%E6%9E%B6%E8%AE%BE%E6%9C%8D%E5%8A%A1%E5%99%A8">Git &ndash; 架设服务器</a></p>
+<a href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000/0013744142037508cf42e51debf49668810645e02887691000">Git教程 - 廖雪峰的官方网站</a><br/>
+<a href="http://git-scm.com/book/zh/%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E7%9A%84-Git-%E6%9E%B6%E8%AE%BE%E6%9C%8D%E5%8A%A1%E5%99%A8">Git - 架设服务器</a></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[我的第一篇博客]]></title>
-    <link href="http://devlvpw.github.io/blog/2014/03/02/my-first-blog/"/>
+    <link href="http://lvpengwei.github.io//blog/2014/03/02/my-first-blog/"/>
     <updated>2014-03-02T15:24:36+08:00</updated>
-    <id>http://devlvpw.github.io/blog/2014/03/02/my-first-blog</id>
+    <id>http://lvpengwei.github.io//blog/2014/03/02/my-first-blog</id>
     <content type="html"><![CDATA[<p><strong>首先介绍一下blog搭建历程。</strong></p>
 
 <p>博客管理工具：<a href="octopress.org">octopress</a></p>
@@ -109,14 +109,13 @@ bundle install
 </ul>
 
 
-<p>博客内容是采用markdown语法，所以需要熟悉一下常用的标签。我用的是Google Chrome的插件&mdash;Minimalist Markdown Editor</p>
+<p>博客内容是采用markdown语法，所以需要熟悉一下常用的标签。我用的是Google Chrome的插件&ndash;Minimalist Markdown Editor</p>
 
 <p><strong>高级配置还没有测试，下次更新！</strong></p>
 
 <p><strong>参考</strong></p>
 
 <ul>
-<li><a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a></li>
 <li><a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a></li>
 <li><a href="http://beyondvincent.com/blog/2013/08/03/108-creating-a-github-blog-using-octopress/">破船之家</a></li>
 <li><a href="http://shanewfx.github.io/blog/2012/02/16/bulid-blog-by-octopress/">思考的轨迹</a></li>
