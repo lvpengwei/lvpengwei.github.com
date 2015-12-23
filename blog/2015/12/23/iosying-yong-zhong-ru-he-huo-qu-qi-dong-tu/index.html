@@ -5,11 +5,12 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>iOS错误日志分析 - lvpengwei’s Blog</title>
+  <title>iOS应用中如何获取启动图 - lvpengwei’s Blog</title>
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="穿衣助手iOS使用umeng来做错误日志统计，下面介绍一下如何通过lldb和错误日志定位崩溃位置。 1.首先，启一个终端，输入lldb，回车。进入lldb模式。如图 2.输入target create --no-dependents --arch armv7 'path'， &hellip;">
+  <meta name="description" content="可以在文档中搜索UILaunchImages和UILaunchImageFile这两个关键字。 前提:使用.xcassets配置LaunchImage。
+1.设备系统为iOS7以上，可以通过遍历由UILaunchImages取出来的dict，根据当前尺寸、系统和方向获取名字。 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +19,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://lvpengwei.github.io//blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/">
+  <link rel="canonical" href="http://lvpengwei.github.io//blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="lvpengwei’s Blog" type="application/atom+xml">
@@ -68,7 +69,7 @@
   
   <header>
     
-      <h1 class="entry-title">iOS错误日志分析</h1>
+      <h1 class="entry-title">iOS应用中如何获取启动图</h1>
     
     
       <p class="meta">
@@ -77,7 +78,7 @@
 
 
 
-<time class='entry-date' datetime='2015-12-23T10:20:55+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:20 am</span></time>
+<time class='entry-date' datetime='2015-12-23T10:32:14+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:32 am</span></time>
         
            | <a href="#disqus_thread"
              data-disqus-identifier="http://lvpengwei.github.io/">Comments</a>
@@ -87,33 +88,35 @@
   </header>
 
 
-<div class="entry-content"><p>穿衣助手iOS使用umeng来做错误日志统计，下面介绍一下如何通过lldb和错误日志定位崩溃位置。</p>
+<div class="entry-content"><p>可以在文档中搜索<code>UILaunchImages</code>和<code>UILaunchImageFile</code>这两个关键字。</p>
 
 <!--more-->
 
 
-<p>1.首先，启一个终端，输入<code>lldb</code>，回车。进入lldb模式。如图
-<img src="http://blog.yourdream.cc/usr/uploads/2015/03/1979910195.png" alt="F91A0BB9-84B4-4BAE-8F11-FF937DEF0CC0.png" /></p>
+<p>前提:使用.xcassets配置LaunchImage。
+1.设备系统为iOS7以上，可以通过遍历由<code>UILaunchImages</code>取出来的dict，根据当前尺寸、系统和方向获取名字。key为<code>UILaunchImageName</code>, <code>UILaunchImageMinimumOSVersion</code>, <code>UILaunchImageSize</code>, <code>UILaunchImageOrientation</code>。
+<img src="http://blog.yourdream.cc/usr/uploads/2015/04/2453186553.png" alt="E5589B97-D7D4-4B6B-B648-0F9D15FEBFA2.png" />
+<img src="http://blog.yourdream.cc/usr/uploads/2015/03/453113142.png" alt="5B51C674-18CC-408C-A394-53ED00E5849F.png" />
+2.设备系统为iOS6及以下，可以通过<code>UILaunchImageFile</code>取出启动图名字，在配上一些参数获取。
+* iPhone5拼上<code>-568h</code>
+* iPad拼上<code>Portrait</code>或者<code>Landscape</code>
+* 其他直接用启动图名字
+<img src="http://blog.yourdream.cc/usr/uploads/2015/04/2656813522.png" alt="C8D35976-AE29-4601-A4BB-45E24826BDCB.png" />
+最后，分析一下.xcassets的配置和打进bundle中素材的对应关系
+<img src="http://blog.yourdream.cc/usr/uploads/2015/03/3287509698.png" alt="D8BBA614-CC66-4DE1-A01D-DEE798E2A549.png" />
+<img src="http://blog.yourdream.cc/usr/uploads/2015/03/3750565276.png" alt="053E1411-BC46-404B-8153-564749A1EBEC.png" /></p>
 
-<p>2.输入<code>target create --no-dependents --arch armv7 'path'</code>，此处path是指可执行文件CYZS的位置，路径大概是<code>~/CYZS\ 1-27-15,\ 9.49\ AM.xcarchive/dSYMs/CYZS.app.dSYM/Contents/Resources/DWARF/CYZS</code>,armv7根据错误日志所记录进行改变，执行即可，如图
-<img src="http://blog.yourdream.cc/usr/uploads/2015/03/2077915295.png" alt="DC2A5FFA-6CE8-4EC2-B189-BB26BADE3A2B.png" /></p>
+<p>iOS8 and Later中的素材分别对应的是iPhone6和6p的尺寸，所以名字是<code>LaunchImage-800-667h@2x.png</code>和<code>LaunchImage-800-Portrait-736h@3x.png</code>(因为6p可以横向，所以带有<code>Portrait</code>，不过事例中没有勾选设置)</p>
 
-<p>3.使用<code>image lookup --address '地址'</code>进行定位。umeng日志如图:
-<img src="http://blog.yourdream.cc/usr/uploads/2015/03/4132646907.png" alt="1E31F2DA-9035-4C3C-BCF0-CC0DF28C4502.png" /></p>
+<p>iOS7 and Later中<code>iPhone</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-700@2x.png</code>和<code>LaunchImage-700-568h@2x.png</code>
+<code>iPad</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-700-Portrait@2x~ipad.png</code>和<code>LaunchImage-700-Portrait~ipad.png</code></p>
 
-<p>然后复制那些前面标有我们APP名称的地址
-<img src="http://blog.yourdream.cc/usr/uploads/2015/03/1195208596.png" alt="407AAE6A-E111-4171-92A8-32BF1F461881.png" /></p>
+<p>iOS6.0 and Later中<code>iPhone</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-568h@2x.png</code>, <code>LaunchImage@2x.png</code>和<code>LaunchImage.png</code>
+<code>iPad</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-Portrait@2x~ipad.png</code>和<code>LaunchImage-Portrait~ipad.png</code></p>
 
-<p>Update : 2015-04-23
-umeng中64位crash的log中发现slide address跟以前的不一样，所以不能正确的定位crash的地址。
-解决方法是在第二步之后输入<code>image list</code>看是否有与umeng中一致的地址，若没有则输入<code>target modules load --file 'path' __TEXT 0x429496729616</code>重设即可。</p>
+<p><a href="https://github.com/lvpengwei/LVLaunchImage">项目地址</a></p>
 
-<p><img src="http://blog.yourdream.cc/usr/uploads/2015/04/612599683.png" alt="asdfasdfa.png" /></p>
-
-<p><a href="http://blog.yourdream.cc/2015/03/06/107.html">本篇博客另外地址</a></p>
-
-<p>参照
-<a href="http://lldb.llvm.org/symbolication.html">The LLDB Debugger</a></p>
+<p><a href="http://blog.yourdream.cc/2015/03/28/119.html">本篇博客另外地址</a></p>
 </div>
 
 
@@ -129,7 +132,7 @@ umeng中64位crash的log中发现slide address跟以前的不一样，所以不�
 
 
 
-<time class='entry-date' datetime='2015-12-23T10:20:55+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:20 am</span></time>
+<time class='entry-date' datetime='2015-12-23T10:32:14+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:32 am</span></time>
       
 
 
@@ -144,10 +147,8 @@ umeng中64位crash的log中发现slide address跟以前的不一样，所以不�
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2014/03/10/learn-git/" title="Previous Post: learn git">&laquo; learn git</a>
+        <a class="basic-alignment left" href="/blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/" title="Previous Post: iOS错误日志分析">&laquo; iOS错误日志分析</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/" title="Next Post: iOS应用中如何获取启动图">iOS应用中如何获取启动图 &raquo;</a>
       
     </p>
   </footer>
@@ -238,8 +239,8 @@ umeng中64位crash的log中发现slide address跟以前的不一样，所以不�
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://lvpengwei.github.io//blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/';
-        var disqus_url = 'http://lvpengwei.github.io//blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/';
+        var disqus_identifier = 'http://lvpengwei.github.io//blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/';
+        var disqus_url = 'http://lvpengwei.github.io//blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/';
         var disqus_script = 'embed.js';
       
     (function () {

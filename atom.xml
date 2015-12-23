@@ -4,7 +4,7 @@
   <title><![CDATA[lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2015-12-23T10:22:23+08:00</updated>
+  <updated>2015-12-23T10:37:25+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -12,6 +12,43 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[iOS应用中如何获取启动图]]></title>
+    <link href="http://lvpengwei.github.io//blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/"/>
+    <updated>2015-12-23T10:32:14+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu</id>
+    <content type="html"><![CDATA[<p>可以在文档中搜索<code>UILaunchImages</code>和<code>UILaunchImageFile</code>这两个关键字。</p>
+
+<!--more-->
+
+
+<p>前提:使用.xcassets配置LaunchImage。
+1.设备系统为iOS7以上，可以通过遍历由<code>UILaunchImages</code>取出来的dict，根据当前尺寸、系统和方向获取名字。key为<code>UILaunchImageName</code>, <code>UILaunchImageMinimumOSVersion</code>, <code>UILaunchImageSize</code>, <code>UILaunchImageOrientation</code>。
+<img src="http://blog.yourdream.cc/usr/uploads/2015/04/2453186553.png" alt="E5589B97-D7D4-4B6B-B648-0F9D15FEBFA2.png" />
+<img src="http://blog.yourdream.cc/usr/uploads/2015/03/453113142.png" alt="5B51C674-18CC-408C-A394-53ED00E5849F.png" />
+2.设备系统为iOS6及以下，可以通过<code>UILaunchImageFile</code>取出启动图名字，在配上一些参数获取。
+* iPhone5拼上<code>-568h</code>
+* iPad拼上<code>Portrait</code>或者<code>Landscape</code>
+* 其他直接用启动图名字
+<img src="http://blog.yourdream.cc/usr/uploads/2015/04/2656813522.png" alt="C8D35976-AE29-4601-A4BB-45E24826BDCB.png" />
+最后，分析一下.xcassets的配置和打进bundle中素材的对应关系
+<img src="http://blog.yourdream.cc/usr/uploads/2015/03/3287509698.png" alt="D8BBA614-CC66-4DE1-A01D-DEE798E2A549.png" />
+<img src="http://blog.yourdream.cc/usr/uploads/2015/03/3750565276.png" alt="053E1411-BC46-404B-8153-564749A1EBEC.png" /></p>
+
+<p>iOS8 and Later中的素材分别对应的是iPhone6和6p的尺寸，所以名字是<code>LaunchImage-800-667h@2x.png</code>和<code>LaunchImage-800-Portrait-736h@3x.png</code>(因为6p可以横向，所以带有<code>Portrait</code>，不过事例中没有勾选设置)</p>
+
+<p>iOS7 and Later中<code>iPhone</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-700@2x.png</code>和<code>LaunchImage-700-568h@2x.png</code>
+<code>iPad</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-700-Portrait@2x~ipad.png</code>和<code>LaunchImage-700-Portrait~ipad.png</code></p>
+
+<p>iOS6.0 and Later中<code>iPhone</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-568h@2x.png</code>, <code>LaunchImage@2x.png</code>和<code>LaunchImage.png</code>
+<code>iPad</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-Portrait@2x~ipad.png</code>和<code>LaunchImage-Portrait~ipad.png</code></p>
+
+<p><a href="https://github.com/lvpengwei/LVLaunchImage">项目地址</a></p>
+
+<p><a href="http://blog.yourdream.cc/2015/03/28/119.html">本篇博客另外地址</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[iOS错误日志分析]]></title>
@@ -40,6 +77,8 @@ umeng中64位crash的log中发现slide address跟以前的不一样，所以不�
 解决方法是在第二步之后输入<code>image list</code>看是否有与umeng中一致的地址，若没有则输入<code>target modules load --file 'path' __TEXT 0x429496729616</code>重设即可。</p>
 
 <p><img src="http://blog.yourdream.cc/usr/uploads/2015/04/612599683.png" alt="asdfasdfa.png" /></p>
+
+<p><a href="http://blog.yourdream.cc/2015/03/06/107.html">本篇博客另外地址</a></p>
 
 <p>参照
 <a href="http://lldb.llvm.org/symbolication.html">The LLDB Debugger</a></p>
