@@ -4,7 +4,7 @@
   <title><![CDATA[lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2015-12-29T22:45:11+08:00</updated>
+  <updated>2015-12-29T22:51:06+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -26,8 +26,10 @@
 
 <p>测试: Push Event Hook编译最新版本.</p>
 
-<p>安装: 使用itms-services链接安装APP, 一个静态的html, iOS测试版本原来的页面
-<img src="http://blog.yourdream.cc/usr/uploads/2015/12/750786045.png" alt="38533D25-BDAD-45CC-8B76-A6716442E3F9.png" /></p>
+<p>安装: 使用itms-services链接安装APP, 一个静态的html, <a href="https://ios.ichuanyi.me/">iOS测试版本原来的页面</a></p>
+
+<!--more-->
+
 
 <h3>出现的问题</h3>
 
@@ -64,8 +66,7 @@
 
 <p><a href="https://github.com/lvpengwei/iOS-download-manifest">根据IPA名字生成不同的items-services链接</a></p>
 
-<p>穿衣助手测试版本安装(feature branch版)
-<img src="http://blog.yourdream.cc/usr/uploads/2015/12/1562054847.png" alt="6975B4EF-657F-45DF-A6EE-83FCAD8863B6.png" /></p>
+<p><a href="https://ios.ichuanyi.me/feature/iPhone/html/index.html">穿衣助手测试版本安装(feature branch版)</a></p>
 
 <h2>参考</h2>
 
