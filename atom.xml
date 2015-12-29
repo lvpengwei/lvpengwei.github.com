@@ -4,7 +4,7 @@
   <title><![CDATA[lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2015-12-23T10:37:25+08:00</updated>
+  <updated>2015-12-29T22:21:40+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -12,6 +12,68 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[穿衣助手iOS团队开发流程转变]]></title>
+    <link href="http://lvpengwei.github.io//blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian/"/>
+    <updated>2015-12-29T22:18:57+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian</id>
+    <content type="html"><![CDATA[<h2>原来的开发模式</h2>
+
+<p>团队使用敏捷开发模式</p>
+
+<p>Git Workflow: 使用<a href="https://www.atlassian.com/git/tutorials/comparing-workflows/centralized-workflow">Centralized Workflow</a>.</p>
+
+<p>测试: Push Event Hook编译最新版本.</p>
+
+<p>安装: 使用itms-services链接安装APP, 一个静态的html, <a href="https://ios.ichuanyi.me/">iOS测试版本原来的页面</a></p>
+
+<!--more-->
+
+
+<h3>出现的问题</h3>
+
+<ul>
+<li>站会人多, 很多与自己不相关的东西, 浪费时间</li>
+<li>发版本时间变长(2星期 -> 一个月)</li>
+</ul>
+
+
+<h2>调整</h2>
+
+<p>整个开发团队是敏捷开发模式, 但是随着业务增加, 需要多条业务线来保证开发任务可控.
+ 每条业务线一个小团队(产品/开发/QA), 每个小团队也是采用敏捷开发模式.</p>
+
+<h2>开发</h2>
+
+<ul>
+<li>整体采用<a href="https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow">Feature Branch Workflow</a>, 一条develop, 多条feature.</li>
+<li>每个feature一个小团队(产品/开发/QA)</li>
+<li>每个feature branch采用<a href="https://www.atlassian.com/git/tutorials/comparing-workflows/centralized-workflow">Centralized Workflow</a>.</li>
+</ul>
+
+
+<h2>持续集成</h2>
+
+<ul>
+<li>QA使用Jenkins编译自己需要的feature branch</li>
+<li>Jenkins编译完成之后将IPA上传到HTTPS服务器, 根据IPA名字生成一个html, 使用itms-services链接安装APP</li>
+</ul>
+
+
+<h2>穿衣助手实现方式</h2>
+
+<p><a href="https://github.com/lvpengwei/iOS-download-manifest">根据IPA名字生成不同的items-services链接</a></p>
+
+<p><a href="https://ios.ichuanyi.me/feature/iPhone/html/index.html">穿衣助手测试版本安装(feature branch版)</a></p>
+
+<h2>参考</h2>
+
+<p><a href="https://git-scm.com/doc">Git - Documentation</a></p>
+
+<p><a href="https://www.atlassian.com/git/tutorials/comparing-workflows/">Git Workflows and Tutorials</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[iOS应用中如何获取启动图]]></title>

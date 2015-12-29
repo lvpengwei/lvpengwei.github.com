@@ -5,11 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>我的第一篇博客 - lvpengwei’s Blog</title>
+  <title>穿衣助手iOS团队开发流程转变 - lvpengwei’s Blog</title>
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="首先介绍一下blog搭建历程。 博客管理工具：octopress 当然第一步你得先安装并了解Git. (Install Git) 首先要安装ruby，当初我是通过rvm来安装，后来出现了一堆麻烦，所以就放弃了这条路，改为HomeBrew->rbenv->ruby。基本不需要配置环境。 1. &hellip;">
+  <meta name="description" content="原来的开发模式 团队使用敏捷开发模式 Git Workflow: 使用Centralized Workflow. 测试: Push Event Hook编译最新版本. 安装: 使用itms-services链接安装APP, 一个静态的html, iOS测试版本原来的页面 出现的问题 站会人多, &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -18,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://lvpengwei.github.io//blog/2014/03/02/my-first-blog/">
+  <link rel="canonical" href="http://lvpengwei.github.io//blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="lvpengwei’s Blog" type="application/atom+xml">
@@ -68,7 +68,7 @@
   
   <header>
     
-      <h1 class="entry-title">我的第一篇博客</h1>
+      <h1 class="entry-title">穿衣助手iOS团队开发流程转变</h1>
     
     
       <p class="meta">
@@ -77,7 +77,7 @@
 
 
 
-<time class='entry-date' datetime='2014-03-02T15:24:36+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2014</span></span> <span class='time'>3:24 pm</span></time>
+<time class='entry-date' datetime='2015-12-29T22:18:57+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:18 pm</span></time>
         
            | <a href="#disqus_thread"
              data-disqus-identifier="http://lvpengwei.github.io/">Comments</a>
@@ -87,64 +87,60 @@
   </header>
 
 
-<div class="entry-content"><p><strong>首先介绍一下blog搭建历程。</strong></p>
+<div class="entry-content"><h2>原来的开发模式</h2>
 
-<p>博客管理工具：<a href="octopress.org">octopress</a></p>
+<p>团队使用敏捷开发模式</p>
 
-<p>当然第一步你得先安装并了解Git. (<a href="http://git-scm.com/">Install Git</a>)</p>
+<p>Git Workflow: 使用<a href="https://www.atlassian.com/git/tutorials/comparing-workflows/centralized-workflow">Centralized Workflow</a>.</p>
 
-<p>首先要安装<strong>ruby</strong>，当初我是通过rvm来安装，后来出现了一堆麻烦，所以就放弃了这条路，改为HomeBrew->rbenv->ruby。基本不需要配置环境。</p>
+<p>测试: Push Event Hook编译最新版本.</p>
 
-<p>1.<a href="http://brew.sh/index_zh-cn.html">安装Homebrew</a>
-2.<a href="http://octopress.org/docs/setup/rbenv/">安装rbenv</a>：Alternate Installation Using Homebrew<br/>
-3.<a href="http://octopress.org/docs/setup/rbenv/">安装Ruby</a>：Install Ruby 1.9.3</p>
+<p>安装: 使用itms-services链接安装APP, 一个静态的html, <a href="https://ios.ichuanyi.me/">iOS测试版本原来的页面</a></p>
 
-<pre><code>ruby --version //查看ruby版本
-</code></pre>
+<!--more-->
 
-<p><strong>安装Octopress</strong></p>
 
-<pre><code>git clone git://github.com/imathis/octopress.git octopress
-cd octopress  
-</code></pre>
-
-<p>然后安装依赖</p>
-
-<pre><code>gem install bundler
-rbenv rehash    # If you use rbenv, rehash to be able to run the bundle command
-bundle install
-</code></pre>
-
-<p>最后安装Octopress</p>
-
-<pre><code>rake install
-</code></pre>
-
-<p>简单配置：主要修改_config.yml，这个配置文件都有相应的注释。主要就是改一些博客头，作者名之类的东西。 注意最好把里面的twitter相关的信息全部删掉，否则由于GFW的原因，将会造成页面load很慢。(from <a href="http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/">唐巧</a>)</p>
-
-<p><strong>写博客方法</strong></p>
+<h3>出现的问题</h3>
 
 <ul>
-<li>rake new_post[‘article name’] 生成博文框架，然后修改生成的文件即可</li>
-<li>rake generate 生成静态文件</li>
-<li>rake preview 在本机4000端口生成访问内容</li>
-<li>rake deploy 发布文件</li>
+<li>站会人多, 很多与自己不相关的东西, 浪费时间</li>
+<li>发版本时间变长(2星期 -> 一个月)</li>
 </ul>
 
 
-<p>博客内容是采用markdown语法，所以需要熟悉一下常用的标签。我用的是Google Chrome的插件&ndash;Minimalist Markdown Editor</p>
+<h2>调整</h2>
 
-<p><strong>高级配置还没有测试，下次更新！</strong></p>
+<p>整个开发团队是敏捷开发模式, 但是随着业务增加, 需要多条业务线来保证开发任务可控.
+ 每条业务线一个小团队(产品/开发/QA), 每个小团队也是采用敏捷开发模式.</p>
 
-<p><strong>参考</strong></p>
+<h2>开发</h2>
 
 <ul>
-<li><a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a></li>
-<li><a href="http://beyondvincent.com/blog/2013/08/03/108-creating-a-github-blog-using-octopress/">破船之家</a></li>
-<li><a href="http://shanewfx.github.io/blog/2012/02/16/bulid-blog-by-octopress/">思考的轨迹</a></li>
-<li><a href="http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/">唐巧的技术博客</a></li>
+<li>整体采用<a href="https://www.atlassian.com/git/tutorials/comparing-workflows/feature-branch-workflow">Feature Branch Workflow</a>, 一条develop, 多条feature.</li>
+<li>每个feature一个小团队(产品/开发/QA)</li>
+<li>每个feature branch采用<a href="https://www.atlassian.com/git/tutorials/comparing-workflows/centralized-workflow">Centralized Workflow</a>.</li>
 </ul>
 
+
+<h2>持续集成</h2>
+
+<ul>
+<li>QA使用Jenkins编译自己需要的feature branch</li>
+<li>Jenkins编译完成之后将IPA上传到HTTPS服务器, 根据IPA名字生成一个html, 使用itms-services链接安装APP</li>
+</ul>
+
+
+<h2>穿衣助手实现方式</h2>
+
+<p><a href="https://github.com/lvpengwei/iOS-download-manifest">根据IPA名字生成不同的items-services链接</a></p>
+
+<p><a href="https://ios.ichuanyi.me/feature/iPhone/html/index.html">穿衣助手测试版本安装(feature branch版)</a></p>
+
+<h2>参考</h2>
+
+<p><a href="https://git-scm.com/doc">Git - Documentation</a></p>
+
+<p><a href="https://www.atlassian.com/git/tutorials/comparing-workflows/">Git Workflows and Tutorials</a></p>
 </div>
 
 
@@ -160,7 +156,7 @@ bundle install
 
 
 
-<time class='entry-date' datetime='2014-03-02T15:24:36+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2014</span></span> <span class='time'>3:24 pm</span></time>
+<time class='entry-date' datetime='2015-12-29T22:18:57+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>29</span><span class='date-suffix'>th</span>, <span class='date-year'>2015</span></span> <span class='time'>10:18 pm</span></time>
       
 
 
@@ -175,8 +171,8 @@ bundle install
     
     <p class="meta">
       
+        <a class="basic-alignment left" href="/blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/" title="Previous Post: iOS应用中如何获取启动图">&laquo; iOS应用中如何获取启动图</a>
       
-        <a class="basic-alignment right" href="/blog/2014/03/10/learn-git/" title="Next Post: learn git">learn git &raquo;</a>
       
     </p>
   </footer>
@@ -271,8 +267,8 @@ bundle install
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://lvpengwei.github.io//blog/2014/03/02/my-first-blog/';
-        var disqus_url = 'http://lvpengwei.github.io//blog/2014/03/02/my-first-blog/';
+        var disqus_identifier = 'http://lvpengwei.github.io//blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian/';
+        var disqus_url = 'http://lvpengwei.github.io//blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian/';
         var disqus_script = 'embed.js';
       
     (function () {
