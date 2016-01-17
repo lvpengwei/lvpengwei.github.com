@@ -5,12 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>iOS应用中如何获取启动图 - lvpengwei’s Blog</title>
+  <title>Charles Map Local功能实现接口本地调试 - lvpengwei’s Blog</title>
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="可以在文档中搜索UILaunchImages和UILaunchImageFile这两个关键字。 前提:使用.xcassets配置LaunchImage。
-1.设备系统为iOS7以上，可以通过遍历由UILaunchImages取出来的dict，根据当前尺寸、系统和方向获取名字。 &hellip;">
+  <meta name="description" content="找到指定接口 右击链接, 出现菜单, 选择Map Local&hellip;; 修改query和Local Path 选择顶部菜单Tools->Rewrite&hellip;, 并添加新的Rule 编辑新的Rule 结果 ">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -19,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://lvpengwei.github.io//blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/">
+  <link rel="canonical" href="http://lvpengwei.github.io//blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="lvpengwei’s Blog" type="application/atom+xml">
@@ -69,7 +68,7 @@
   
   <header>
     
-      <h1 class="entry-title">iOS应用中如何获取启动图</h1>
+      <h1 class="entry-title">Charles Map Local功能实现接口本地调试</h1>
     
     
       <p class="meta">
@@ -78,7 +77,7 @@
 
 
 
-<time class='entry-date' datetime='2015-12-23T10:32:14+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:32 am</span></time>
+<time class='entry-date' datetime='2016-01-17T14:31:17+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>17</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>2:31 pm</span></time>
         
            | <a href="#disqus_thread"
              data-disqus-identifier="http://lvpengwei.github.io/">Comments</a>
@@ -88,35 +87,22 @@
   </header>
 
 
-<div class="entry-content"><p>可以在文档中搜索<code>UILaunchImages</code>和<code>UILaunchImageFile</code>这两个关键字。</p>
+<div class="entry-content"><p>找到指定接口
+<img src="http://blog.yourdream.cc/usr/uploads/2016/01/1856358483.jpeg" alt="8FC03A50-82B0-4EF5-A8B0-2B9A4677B151.jpeg" /></p>
 
-<!--more-->
+<p>右击链接, 出现菜单, 选择Map Local&hellip;; 修改query和Local Path
+<img src="http://blog.yourdream.cc/usr/uploads/2016/01/2348193668.jpeg" alt="FD22D43A-AF1D-4C2C-994B-9385FC011E46.jpeg" /></p>
 
+<p>选择顶部菜单Tools->Rewrite&hellip;, 并添加新的Rule
+<img src="http://blog.yourdream.cc/usr/uploads/2016/01/4070059063.jpeg" alt="078F326F-E5FD-4FF4-8ECF-2433B325C052.jpeg" /></p>
 
-<p>前提:使用.xcassets配置LaunchImage。
-1.设备系统为iOS7以上，可以通过遍历由<code>UILaunchImages</code>取出来的dict，根据当前尺寸、系统和方向获取名字。key为<code>UILaunchImageName</code>, <code>UILaunchImageMinimumOSVersion</code>, <code>UILaunchImageSize</code>, <code>UILaunchImageOrientation</code>。
-<img src="http://blog.yourdream.cc/usr/uploads/2015/04/2453186553.png" alt="E5589B97-D7D4-4B6B-B648-0F9D15FEBFA2.png" />
-<img src="http://blog.yourdream.cc/usr/uploads/2015/03/453113142.png" alt="5B51C674-18CC-408C-A394-53ED00E5849F.png" />
-2.设备系统为iOS6及以下，可以通过<code>UILaunchImageFile</code>取出启动图名字，在配上一些参数获取。
-* iPhone5拼上<code>-568h</code>
-* iPad拼上<code>Portrait</code>或者<code>Landscape</code>
-* 其他直接用启动图名字
-<img src="http://blog.yourdream.cc/usr/uploads/2015/04/2656813522.png" alt="C8D35976-AE29-4601-A4BB-45E24826BDCB.png" />
-最后，分析一下.xcassets的配置和打进bundle中素材的对应关系
-<img src="http://blog.yourdream.cc/usr/uploads/2015/03/3287509698.png" alt="D8BBA614-CC66-4DE1-A01D-DEE798E2A549.png" />
-<img src="http://blog.yourdream.cc/usr/uploads/2015/03/3750565276.png" alt="053E1411-BC46-404B-8153-564749A1EBEC.png" /></p>
+<p>编辑新的Rule
+<img src="http://blog.yourdream.cc/usr/uploads/2016/01/1196373639.jpeg" alt="6760FEA7-12FE-4F0A-B3C4-562C290738C5.jpeg" /></p>
 
-<p>iOS8 and Later中的素材分别对应的是iPhone6和6p的尺寸，所以名字是<code>LaunchImage-800-667h@2x.png</code>和<code>LaunchImage-800-Portrait-736h@3x.png</code>(因为6p可以横向，所以带有<code>Portrait</code>，不过事例中没有勾选设置)</p>
+<p>结果
+<img src="http://blog.yourdream.cc/usr/uploads/2016/01/1097008502.jpeg" alt="B38D253F-CB3B-4719-BAEC-0CC626FC6290.jpeg" /></p>
 
-<p>iOS7 and Later中<code>iPhone</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-700@2x.png</code>和<code>LaunchImage-700-568h@2x.png</code>
-<code>iPad</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-700-Portrait@2x~ipad.png</code>和<code>LaunchImage-700-Portrait~ipad.png</code></p>
-
-<p>iOS6.0 and Later中<code>iPhone</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-568h@2x.png</code>, <code>LaunchImage@2x.png</code>和<code>LaunchImage.png</code>
-<code>iPad</code>的<code>Portrait</code>生成的素材是<code>LaunchImage-Portrait@2x~ipad.png</code>和<code>LaunchImage-Portrait~ipad.png</code></p>
-
-<p><a href="https://github.com/lvpengwei/LVLaunchImage">项目地址</a></p>
-
-<p><a href="http://blog.yourdream.cc/2015/03/28/119.html">本篇博客另外地址</a></p>
+<p><img src="http://blog.yourdream.cc/usr/uploads/2016/01/2757025431.jpeg" alt="E397F8AC-D864-40DF-ACA5-60753D5D60FD.jpeg" /></p>
 </div>
 
 
@@ -132,7 +118,7 @@
 
 
 
-<time class='entry-date' datetime='2015-12-23T10:32:14+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:32 am</span></time>
+<time class='entry-date' datetime='2016-01-17T14:31:17+08:00'><span class='date'><span class='date-month'>Jan</span> <span class='date-day'>17</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>2:31 pm</span></time>
       
 
 
@@ -147,10 +133,8 @@
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/" title="Previous Post: iOS错误日志分析">&laquo; iOS错误日志分析</a>
+        <a class="basic-alignment left" href="/blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian/" title="Previous Post: 穿衣助手iOS团队开发流程转变">&laquo; 穿衣助手iOS团队开发流程转变</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian/" title="Next Post: 穿衣助手iOS团队开发流程转变">穿衣助手iOS团队开发流程转变 &raquo;</a>
       
     </p>
   </footer>
@@ -245,8 +229,8 @@
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://lvpengwei.github.io//blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/';
-        var disqus_url = 'http://lvpengwei.github.io//blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/';
+        var disqus_identifier = 'http://lvpengwei.github.io//blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi/';
+        var disqus_url = 'http://lvpengwei.github.io//blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi/';
         var disqus_script = 'embed.js';
       
     (function () {

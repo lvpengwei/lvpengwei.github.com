@@ -4,7 +4,7 @@
   <title><![CDATA[lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2015-12-29T22:51:06+08:00</updated>
+  <updated>2016-01-17T14:32:42+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -12,6 +12,30 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Charles Map Local功能实现接口本地调试]]></title>
+    <link href="http://lvpengwei.github.io//blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi/"/>
+    <updated>2016-01-17T14:31:17+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi</id>
+    <content type="html"><![CDATA[<p>找到指定接口
+<img src="http://blog.yourdream.cc/usr/uploads/2016/01/1856358483.jpeg" alt="8FC03A50-82B0-4EF5-A8B0-2B9A4677B151.jpeg" /></p>
+
+<p>右击链接, 出现菜单, 选择Map Local&hellip;; 修改query和Local Path
+<img src="http://blog.yourdream.cc/usr/uploads/2016/01/2348193668.jpeg" alt="FD22D43A-AF1D-4C2C-994B-9385FC011E46.jpeg" /></p>
+
+<p>选择顶部菜单Tools->Rewrite&hellip;, 并添加新的Rule
+<img src="http://blog.yourdream.cc/usr/uploads/2016/01/4070059063.jpeg" alt="078F326F-E5FD-4FF4-8ECF-2433B325C052.jpeg" /></p>
+
+<p>编辑新的Rule
+<img src="http://blog.yourdream.cc/usr/uploads/2016/01/1196373639.jpeg" alt="6760FEA7-12FE-4F0A-B3C4-562C290738C5.jpeg" /></p>
+
+<p>结果
+<img src="http://blog.yourdream.cc/usr/uploads/2016/01/1097008502.jpeg" alt="B38D253F-CB3B-4719-BAEC-0CC626FC6290.jpeg" /></p>
+
+<p><img src="http://blog.yourdream.cc/usr/uploads/2016/01/2757025431.jpeg" alt="E397F8AC-D864-40DF-ACA5-60753D5D60FD.jpeg" /></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[穿衣助手iOS团队开发流程转变]]></title>
