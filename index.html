@@ -9,7 +9,8 @@
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="找到指定接口 右击链接, 出现菜单, 选择Map Local&hellip;; 修改query和Local Path 选择顶部菜单Tools->Rewrite&hellip;, 并添加新的Rule 编辑新的Rule 结果 ">
+  <meta name="description" content="平常做iOS开发的时候经常使用ShadowsocksX来翻墙查资料, 使用Charles来抓包debug. 但是两个软件不能同时开, 一直想不到什么好的解决办法. Surge特点是: 支持翻墙, 但是抓包的request和response不够详细.
+Mac版的Surge还要自己配置Web &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -65,6 +66,56 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/">Charles+Surge解决抓包和翻墙的冲突问题</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-02-16T23:34:49+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>16</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>11:34 pm</span></time>
+        
+           | <a href="/blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io//blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>平常做iOS开发的时候经常使用<code>ShadowsocksX</code>来翻墙查资料, 使用<code>Charles</code>来抓包debug. 但是两个软件不能同时开, 一直想不到什么好的解决办法.</p>
+
+<p><code>Surge</code>特点是: 支持翻墙, 但是抓包的request和response不够详细.
+Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web Proxy(HTTPS)</code>.</p>
+
+<p>然后我就查了一下<code>Charles</code>的菜单, 发现了<code>External Proxy Setting</code>, 然后发现刚好支持<code>Web Proxy(HTTP)</code>和<code>Secure Web Proxy(HTTPS)</code>, 配好调试, 果然成功. 然后手机上再设置成<code>Charles</code>的<code>Web Proxy(HTTP)</code>, 也是可以抓包和翻墙的.</p>
+
+<p><code>Charles</code>特点是: 抓包的request和response很详细, 但是<code>External Proxy Setting</code>支持的protocol比较少.</p>
+
+<p><code>Charles</code>和<code>Surge</code>结合起来就很完美的解决了我这个问题.</p>
+
+<p>再简化一步, 就直接用手机上的<code>Surge</code>生成一个<code>Web Proxy(HTTP)</code>的config, 这样就不用每次去系统设置里手动设置了(每次敲好麻烦), 这样每次进入公司, 电脑上开着<code>Charles</code>和Mac版的<code>Surge</code>, 手机上起着<code>Surge</code>, 两个设备都可以被抓包和翻墙, 妈妈再也不用担心我在<code>ShadowsocksX</code>和<code>Charles</code>这两个软件之间来回切换了.</p>
+
+<p>附几张比较重要的图:
+<code>Charles</code>的<code>External Proxy Setting</code>
+<img src="http://blog.yourdream.cc/usr/uploads/2016/02/3866250793.png" alt="51F279D2-6924-4BB8-A230-48C693F2CE96.png" /></p>
+
+<p>手机上的Surge的<code>Web Proxy(HTTP)</code>的config
+<img src="http://blog.yourdream.cc/usr/uploads/2016/02/567163980.png" alt="IMG_1261.png" /></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -403,6 +454,10 @@ bundle install
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/">Charles+Surge解决抓包和翻墙的冲突问题</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi/">Charles Map Local功能实现接口本地调试</a>
       </li>
     
@@ -416,10 +471,6 @@ bundle install
     
       <li class="post">
         <a href="/blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/">iOS错误日志分析</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2014/03/10/learn-git/">Learn Git</a>
       </li>
     
   </ul>
