@@ -4,7 +4,7 @@
   <title><![CDATA[lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2016-03-19T01:30:23+08:00</updated>
+  <updated>2016-03-19T01:33:26+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -18,9 +18,7 @@
     <link href="http://lvpengwei.github.io//blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/"/>
     <updated>2016-03-19T01:27:38+08:00</updated>
     <id>http://lvpengwei.github.io//blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi</id>
-    <content type="html"><![CDATA[<h1>Android坐标系学习案例(与iOS进行对比)</h1>
-
-<p>问题: 判断parent view中的手势是否出现在旋转之后的subview的范围中的解决方法(iOS&amp;Android)</p>
+    <content type="html"><![CDATA[<p>问题: 判断parent view中的手势是否出现在旋转之后的subview的范围中的解决方法(iOS&amp;Android)</p>
 
 <p>解决思路: 取出点击位置的point, 然后translate到subview的坐标系中, 判断是否在subview的矩形中即可.</p>
 

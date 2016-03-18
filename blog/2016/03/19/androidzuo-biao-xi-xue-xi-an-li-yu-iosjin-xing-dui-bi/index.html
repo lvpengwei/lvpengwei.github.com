@@ -9,7 +9,7 @@
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="Android坐标系学习案例(与iOS进行对比) 问题: 判断parent view中的手势是否出现在旋转之后的subview的范围中的解决方法(iOS&amp;Android) 解决思路: 取出点击位置的point, 然后translate到subview的坐标系中, &hellip;">
+  <meta name="description" content="问题: 判断parent view中的手势是否出现在旋转之后的subview的范围中的解决方法(iOS&amp;Android) 解决思路: 取出点击位置的point, 然后translate到subview的坐标系中, 判断是否在subview的矩形中即可. iOS: 现象: 代码: 结果: &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -87,9 +87,7 @@
   </header>
 
 
-<div class="entry-content"><h1>Android坐标系学习案例(与iOS进行对比)</h1>
-
-<p>问题: 判断parent view中的手势是否出现在旋转之后的subview的范围中的解决方法(iOS&amp;Android)</p>
+<div class="entry-content"><p>问题: 判断parent view中的手势是否出现在旋转之后的subview的范围中的解决方法(iOS&amp;Android)</p>
 
 <p>解决思路: 取出点击位置的point, 然后translate到subview的坐标系中, 判断是否在subview的矩形中即可.</p>
 
