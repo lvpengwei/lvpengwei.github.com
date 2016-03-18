@@ -9,8 +9,7 @@
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="平常做iOS开发的时候经常使用ShadowsocksX来翻墙查资料, 使用Charles来抓包debug. 但是两个软件不能同时开, 一直想不到什么好的解决办法. Surge特点是: 支持翻墙, 但是抓包的request和response不够详细.
-Mac版的Surge还要自己配置Web &hellip;">
+  <meta name="description" content="Android坐标系学习案例(与iOS进行对比) 问题: 判断parent view中的手势是否出现在旋转之后的subview的范围中的解决方法(iOS&amp;Android) 解决思路: 取出点击位置的point, 然后translate到subview的坐标系中, &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -66,6 +65,118 @@ Mac版的Surge还要自己配置Web &hellip;">
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/">Android坐标系学习案例(与iOS进行对比)</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-03-19T01:27:38+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>19</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>1:27 am</span></time>
+        
+           | <a href="/blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io//blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h1>Android坐标系学习案例(与iOS进行对比)</h1>
+
+<p>问题: 判断parent view中的手势是否出现在旋转之后的subview的范围中的解决方法(iOS&amp;Android)</p>
+
+<p>解决思路: 取出点击位置的point, 然后translate到subview的坐标系中, 判断是否在subview的矩形中即可.</p>
+
+<h2>iOS:</h2>
+
+<p>现象:
+<img src="http://blog.yourdream.cc/usr/uploads/2016/03/2100571732.png" alt="7DBEE162-CB37-44E7-8560-4E50556532DA.png" /></p>
+
+<p>代码:
+<img src="http://blog.yourdream.cc/usr/uploads/2016/03/2933493193.png" alt="0FDD8A27-5C7F-48EB-A0DD-853FDA4B846C.png" /></p>
+
+<p>结果:
+<img src="http://blog.yourdream.cc/usr/uploads/2016/03/1751422177.png" alt="78067F60-E64B-4FFB-AA67-68783D824B32.png" /></p>
+
+<p>部分解释: iOS中的view有frame/bounds/center/transform等坐标属性,</p>
+
+<h3>四者的区别(具体可查看文档, 非常详细)</h3>
+
+<ul>
+<li><code>frame</code>: 相对于parent view的坐标系</li>
+<li><code>bounds</code>: 相对于自己的坐标系</li>
+<li><code>center</code>: view的中心点(跟layer的anchorPoint有关, anchorPoint默认值是(0.5, 0.5), 所以是中心点)</li>
+<li><code>transform</code>: 相对于center的缩放/旋转等二维操作. layer中有个transform是三维的.</li>
+</ul>
+
+
+<p>三者之间的关系是-bounds/center/transform会影响frame的值.</p>
+
+<p>大部分情况, 我们使用的<code>frame</code>(x, y, width, height)只影响到了<code>bounds</code>和<code>center</code>, 此时<code>transform</code>是初始值<code>CGAffineTransformIdentity</code>; 而当我们要设置<code>transform</code>的时候, frame的值就会变得很奇怪. 其实<code>frame</code>还是那个矩形, 不过它代表的含义是能包含这个view的最小矩形而已. 因为<code>transform</code>涉及到scale/rotation等操作, 所以<code>frame</code>看起来和我们真正想要的值不太一样, 而这时候就是需要分开使用center/bounds/transform的时候, 不能单独设置frame.</p>
+
+<p><code>layer</code>的相关属性不介绍, 有兴趣可以直接查看API文档.</p>
+
+<h2>Android:</h2>
+
+<p>类似的, 我开始在Android中寻找相应的解决方案. 首先需要明白的几个点</p>
+
+<ul>
+<li>Android的每一个view也有自己的坐标系, 左上角是原点(0, 0)</li>
+<li>Android的view的基础坐标属性是left/top/right/bottom. width和height是由前四个值推算得来.</li>
+<li>Android的view的matrix作用对应于iOS的view的transform.</li>
+</ul>
+
+
+<p>解决思路还是上面所述, 但是取出点击的point容易, translate到subview的坐标系中遇到了一些问题, iOS中此api存在于UIView中, 而Android的View却没有. 搜索一圈, 还是在Android的事件分发的源码中获取答案.
+现象:
+<img src="http://blog.yourdream.cc/usr/uploads/2016/03/4071683902.png" alt="A5809894-B554-433E-B603-172DC01AEB93.png" /></p>
+
+<p>代码:
+<img src="http://blog.yourdream.cc/usr/uploads/2016/03/2280097835.png" alt="B7B8A792-4D22-4EDF-B672-A96C1A5FCCA4.png" /></p>
+
+<p>布局代码:</p>
+
+<p><img src="http://blog.yourdream.cc/usr/uploads/2016/03/2828618216.png" alt="007A1AED-36E2-4A51-B5CA-7970D56DC40C.png" /></p>
+
+<p>结果:
+<img src="http://blog.yourdream.cc/usr/uploads/2016/03/240624671.png" alt="2C8C9B9F-FD20-4986-BE8B-BAAA346943FD.png" /></p>
+
+<p>部分解释:
+代码部分借鉴了Android源码.
+<img src="http://blog.yourdream.cc/usr/uploads/2016/03/3174007967.png" alt="069605CE-BF37-4BDA-B054-0514E4090EA4.png" /></p>
+
+<ol>
+<li>先deep copy出一份新的event.</li>
+<li>设置event的offsetLocation.</li>
+<li>给event应用subview的inverse matrix.</li>
+<li>还有很多类似对应的属性(后边继续学习, 本次没有用到)</li>
+</ol>
+
+
+<p> 然后event就被成功的转换到旋转后的view的坐标系中(斜着的), 原点是左上角.</p>
+
+<p>遇到的问题:</p>
+
+<ul>
+<li>ev.offsetLocation: 因为我是在activity中override onTouchEvent, 所以在计算deltaX和deltaY的时候先减去了relativeLayout距离window的x和y, 再减去了demoTextView的left和top. 1.为什么不直接减去demoTextView距离window的x和y? 因为我发现, demoTextView被旋转之后, 它的left/top/right/bottom并没有改变, 从现象的截图里我们也可以看出. 而demoTextView.getLocationInWindow获取的point却是旋转之后的值, 从log中可以看出. 2.为什么不减去relativeLayout的left和top, 而是减去距离window的x和y? 因为relativeLayout只是activity的contentView, 外层还有多少ViewGroup是未知, 所以直接减去距离window的x和y.</li>
+<li>ev.transform: 源码里面的写法是<code>transformedEvent.transform(child.getInverseMatrix());</code>, 而我自己去调用<code>demoTextView.getInverseMatrix()</code>的时候, 一直报错, 而且API文档中并没有这个方法, 所以就直接去Matrix的类里面去搜关键词<code>inverse</code>, 发现有这样的方法可以使用.</li>
+</ul>
+
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -454,6 +565,10 @@ bundle install
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/">Android坐标系学习案例(与iOS进行对比)</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/">Charles+Surge解决抓包和翻墙的冲突问题</a>
       </li>
     
@@ -467,10 +582,6 @@ bundle install
     
       <li class="post">
         <a href="/blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/">iOS应用中如何获取启动图</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/">iOS错误日志分析</a>
       </li>
     
   </ul>
