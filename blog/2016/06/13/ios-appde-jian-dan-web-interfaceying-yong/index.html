@@ -1,0 +1,338 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>iOS APP的简单Web Interface应用 - lvpengwei’s Blog</title>
+  <meta name="author" content="lvpengwei">
+
+  
+  <meta name="description" content="最近接了一个内部工具开发的需求：运营人员需要生成商品尺码图片，之前他们是用PS做的，现在想让我们做个程序工具化这个过程。 刚拿到这个需求，分析之后，想了两个方案： APP生成图片，导出到电脑
+h5生成图片save到电脑
+脚本生成，因为UI比较复杂，需要获取数据，所以排除 由于对APP开发比较熟悉 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://lvpengwei.github.io//blog/2016/06/13/ios-appde-jian-dan-web-interfaceying-yong/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="lvpengwei’s Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">lvpengwei’s Blog</a></h1>
+  
+    <h2>学习历程，生活点滴。</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="lvpengwei.github.io/">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">iOS APP的简单Web Interface应用</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-06-13T17:28:28+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>5:28 pm</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><pre><code>  最近接了一个内部工具开发的需求：运营人员需要生成商品尺码图片，之前他们是用PS做的，现在想让我们做个程序工具化这个过程。
+</code></pre>
+
+<p>刚拿到这个需求，分析之后，想了两个方案：</p>
+
+<ol>
+<li>APP生成图片，导出到电脑</li>
+<li>h5生成图片save到电脑</li>
+<li>脚本生成，因为UI比较复杂，需要获取数据，所以排除</li>
+</ol>
+
+
+<p>由于对APP开发比较熟悉，所以尝试着用客户端去做，生成图片不难，关键是如何导出到电脑上，当时的思路是</p>
+
+<ol>
+<li>iOS的话保存到相册用AirDrop去传</li>
+<li>Android保存到SD卡上，用PC上的软件导出</li>
+<li>打成zip包，客户端起一个server，把zip download下来</li>
+</ol>
+
+
+<p>本着操作简洁的原则，开始探索第三种方案。</p>
+
+<p>一个程序，对用户来说只要有输入和输出就行了，中间不需要什么过多的介入，这才是优化流程的意义所在。</p>
+
+<p>在这个例子中，输入是商品id数组，输出是一个zip包。</p>
+
+<p>设计流程是：接收一个商品id数组，开始进行处理，最终输出一张图片save到Documents的一个文件夹下，然后进行zip打包，最后进行下载。</p>
+
+<p>遇到的问题：</p>
+
+<p>1.iOS的<code>AutoLayout</code>，图片的模板是用<code>AutoLayout</code>实现，变高(基于<code>AutoLayout</code>中<code>view</code>的<code>ContentSize</code>概念)。问题就是截图的时候会报警告，然后出的图是空的，debug之后，发现是view赋值之后没有进行layout，所以size是<code>CGSizeZero</code>的，截图时得到的context是0x0，之前在项目中，没有出现此问题，是因为view一般都会有superview，而superview在layout的时候subview也会layout。这里的view没有superview，所以没人触发它的layout过程，加了两行代码，完成。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>[self setNeedsUpdateConstraints];
+</span><span class='line'>[self layoutIfNeeded];</span></code></pre></td></tr></table></div></figure>
+
+
+<p>2.在提交商品id数组之后，如果处理过程是异步的，那么如何通知用户是个问题，本来打算是手机local notification通知，但是我们这个APP直接部署在局域网的Mac Pro的模拟器里面，不需要用户安装，而web页面做push操作比较麻烦，所以采用同步处理，也就是说，提交过商品id数组之后页面一直loading，直到处理完毕，给出下一个页面。在APP端，商品信息的加载和商品主图的加载也是异步的，那么怎么才能在一个请求中做同步呢，也就是收到web请求的时候，提交到一个manager中去处理这部分商品，但是这里sleep掉，等那边处理完毕之后，再唤醒接着返回response，于是就想到了iOS的<code>Runloop</code>这个机制。代码如下：</p>
+
+<p><code>MyHTTPConnection.m</code></p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>NSPort *port = [NSMachPort port];
+</span><span class='line'>[[NSRunLoop currentRunLoop] addPort:port forMode:NSDefaultRunLoopMode];
+</span><span class='line'>[ExportImageManager sharedInstance].thread = [NSThread currentThread];
+</span><span class='line'>[[ExportImageManager sharedInstance] createImageWithGoodsIds:goodsIdArr];
+</span><span class='line'>while (![ExportImageManager sharedInstance].completed) {
+</span><span class='line'>    NSLog(@"runloop start......");
+</span><span class='line'>    [[NSRunLoop currentRunLoop] runMode:NSDefaultRunLoopMode beforeDate:[NSDate distantFuture]];
+</span><span class='line'>    NSLog(@"runloop end......");
+</span><span class='line'>}
+</span><span class='line'>[[NSRunLoop currentRunLoop] removePort:port forMode:NSDefaultRunLoopMode];
+</span><span class='line'>CFRunLoopStop(CFRunLoopGetCurrent());
+</span><span class='line'>[ExportImageManager sharedInstance].thread = nil;</span></code></pre></td></tr></table></div></figure>
+
+
+<p>注解：
+这块代码执行的环境是在HTTPServer的队列里面，所以在哪个线程中是未知的，线程中的runloop默认是不开启的，所以在这里，做了几件事</p>
+
+<ol>
+<li>声明一个port放在runloop中，防止runloop中没有任何输入源会直接退出</li>
+<li>把当前所在的thread赋给manager，当处理完成的时候，在这个thread上performSelector，唤醒runloop</li>
+<li>在while循环中启动runloop</li>
+<li>把之前的port remove掉</li>
+<li>把runloop停掉</li>
+<li>之前引用的thread清空</li>
+</ol>
+
+
+<p>最终实现，3个操作步骤</p>
+
+<ol>
+<li><code>localhost:8081/create?id,id,id,id</code> 图片生成请求，response返回的时候处理结束，会在<code>Documents/export/</code>的文件夹下生成以商品id命名的图片</li>
+<li><code>localhost:8081/zip</code> 将<code>Documents/export</code>打包成<code>Documents/export.zip</code> 并删除<code>Documents/export</code></li>
+<li><code>localhost:8081/export.zip</code> 下载zip</li>
+</ol>
+
+
+<p>其实可以把打包操作合并在第一步中。缩减为两步</p>
+
+<p><strong>思路来源是，QQ阅读传pdf的时候是在电脑上打开一个网页，然后把文件拖进去就可以同步到手机。实现之后发现，这个功能和<code>Charles</code>的<code>Web Interface</code>功能一样。。</strong></p>
+
+<p>项目地址：<a href="https://github.com/lvpengwei/ExportGoodsImage">https://github.com/lvpengwei/ExportGoodsImage</a></p>
+
+<p><img src="http://blog.yourdream.cc/usr/uploads/2016/06/3834834005.png" alt="Simulator Screen Shot Jun 13, 2016, 17.00.33.png" /></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">lvpengwei</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2016-06-13T17:28:28+08:00'><span class='date'><span class='date-month'>Jun</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>5:28 pm</span></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/" title="Previous Post: Android坐标系学习案例(与iOS进行对比)">&laquo; Android坐标系学习案例(与iOS进行对比)</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2016/06/13/ios-appde-jian-dan-web-interfaceying-yong/">iOS APP的简单Web Interface应用</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/">Android坐标系学习案例(与iOS进行对比)</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/">Charles+Surge解决抓包和翻墙的冲突问题</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi/">Charles Map Local功能实现接口本地调试</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian/">穿衣助手iOS团队开发流程转变</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/lvpengwei">@lvpengwei</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'lvpengwei',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2016 - lvpengwei -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'lvpengwei';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://lvpengwei.github.io//blog/2016/06/13/ios-appde-jian-dan-web-interfaceying-yong/';
+        var disqus_url = 'http://lvpengwei.github.io//blog/2016/06/13/ios-appde-jian-dan-web-interfaceying-yong/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
