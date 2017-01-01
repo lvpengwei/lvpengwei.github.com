@@ -126,7 +126,17 @@
 
 <p>然后把这个过程写成一个脚本，输入是一行一个链接的文本，输出是想要的图片，脚本来做下载和解析。</p>
 
-<h3>链接的收集</h3>
+<h3>tokenId获取</h3>
+
+<p>脚本可以自动收集链接，需要抓包获取tokenId</p>
+
+<ol>
+<li>使用浏览器(Chrome)：登录网页版<a href="https://disneyphotopass.com.cn/">乐拍通</a>，然后<code>检查(Inspect)</code>去<code>网络(Network)</code>里找</li>
+<li>乐拍通App抓包</li>
+</ol>
+
+
+<h3>链接的收集(Deprecated)</h3>
 
 <p>给手机设上代理，打开乐拍通，进入图片详情，然后一张一张滑过去，然后过滤一下，全选，右击，Copy URLs，然后粘在一个<code>disneyphotopass</code>文档里，执行脚本，就可以了。
 <img src="http://blog.yourdream.cc/usr/uploads/2016/12/317483537.png" alt="enter image description here" /></p>
@@ -244,7 +254,7 @@
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2016 - lvpengwei -
+  Copyright &copy; 2017 - lvpengwei -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
