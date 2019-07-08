@@ -53,7 +53,6 @@ categories:
 **参考**  
 
  -  [http://octopress.org/docs/setup/](http://octopress.org/docs/setup/)
- -  [http://octopress.org/docs/setup/](http://octopress.org/docs/setup/)
  -  [破船之家](http://beyondvincent.com/blog/2013/08/03/108-creating-a-github-blog-using-octopress/)
  -  [思考的轨迹](http://shanewfx.github.io/blog/2012/02/16/bulid-blog-by-octopress/)
  -  [唐巧的技术博客](http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/)
