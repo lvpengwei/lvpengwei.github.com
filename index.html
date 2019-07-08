@@ -9,8 +9,10 @@
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="迪斯尼乐拍通App里面的照片导出收费，而且费用很高，我通过抓包拿到App里面的图片链接然后使用脚本下载解析得到高清的图片（非原图）
-代码：Disneyphotopass-export 过程 抓包：使用Charles拿到某张图片的链接，下载下来之后发现是另外一个图片，如下图，这时候就蛋疼了， &hellip;">
+  <meta name="description" content="在 iOS &amp; Android 上播放带 alpha 的 mp4 视频，用来代替序列帧动画(png/webp)，素材小，播放也流畅。 用滤镜就可以完成，Demo 地址：
+iOS
+Android 如何使用 AE 制作带 alpha 的 mp4
+">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -77,6 +79,44 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/">iOS&amp;Android 播放透明视频</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-07-08T21:49:54+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:49 pm</span></time>
+        
+           | <a href="/blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io//blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><p>在 iOS &amp; Android 上播放带 alpha 的 mp4 视频，用来代替序列帧动画(png/webp)，素材小，播放也流畅。</p>
+
+<p>用滤镜就可以完成，Demo 地址：<br/>
+<a href="https://github.com/lvpengwei/AlphaVideoiOS">iOS</a><br/>
+<a href="https://github.com/lvpengwei/ExoPlayerFilter">Android</a></p>
+
+<p><a href="https://felgo.com/doc/felgo-alphavideo/#how-to-create-an-alpha-video">如何使用 AE 制作带 alpha 的 mp4</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -681,96 +721,9 @@ git 参考教程 :<br/>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/03/02/my-first-blog/">我的第一篇博客</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-03-02T15:24:36+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>2</span><span class='date-suffix'>nd</span>, <span class='date-year'>2014</span></span> <span class='time'>3:24 pm</span></time>
-        
-           | <a href="/blog/2014/03/02/my-first-blog/#disqus_thread"
-             data-disqus-identifier="http://lvpengwei.github.io//blog/2014/03/02/my-first-blog/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p><strong>首先介绍一下blog搭建历程。</strong></p>
-
-<p>博客管理工具：<a href="octopress.org">octopress</a></p>
-
-<p>当然第一步你得先安装并了解Git. (<a href="http://git-scm.com/">Install Git</a>)</p>
-
-<p>首先要安装<strong>ruby</strong>，当初我是通过rvm来安装，后来出现了一堆麻烦，所以就放弃了这条路，改为HomeBrew->rbenv->ruby。基本不需要配置环境。</p>
-
-<p>1.<a href="http://brew.sh/index_zh-cn.html">安装Homebrew</a>
-2.<a href="http://octopress.org/docs/setup/rbenv/">安装rbenv</a>：Alternate Installation Using Homebrew<br/>
-3.<a href="http://octopress.org/docs/setup/rbenv/">安装Ruby</a>：Install Ruby 1.9.3</p>
-
-<pre><code>ruby --version //查看ruby版本
-</code></pre>
-
-<p><strong>安装Octopress</strong></p>
-
-<pre><code>git clone git://github.com/imathis/octopress.git octopress
-cd octopress  
-</code></pre>
-
-<p>然后安装依赖</p>
-
-<pre><code>gem install bundler
-rbenv rehash    # If you use rbenv, rehash to be able to run the bundle command
-bundle install
-</code></pre>
-
-<p>最后安装Octopress</p>
-
-<pre><code>rake install
-</code></pre>
-
-<p>简单配置：主要修改_config.yml，这个配置文件都有相应的注释。主要就是改一些博客头，作者名之类的东西。 注意最好把里面的twitter相关的信息全部删掉，否则由于GFW的原因，将会造成页面load很慢。(from <a href="http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/">唐巧</a>)</p>
-
-<p><strong>写博客方法</strong></p>
-
-<ul>
-<li>rake new_post[‘article name’] 生成博文框架，然后修改生成的文件即可</li>
-<li>rake generate 生成静态文件</li>
-<li>rake preview 在本机4000端口生成访问内容</li>
-<li>rake deploy 发布文件</li>
-</ul>
-
-
-<p>博客内容是采用markdown语法，所以需要熟悉一下常用的标签。我用的是Google Chrome的插件&ndash;Minimalist Markdown Editor</p>
-
-<p><strong>高级配置还没有测试，下次更新！</strong></p>
-
-<p><strong>参考</strong></p>
-
-<ul>
-<li><a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a></li>
-<li><a href="http://beyondvincent.com/blog/2013/08/03/108-creating-a-github-blog-using-octopress/">破船之家</a></li>
-<li><a href="http://shanewfx.github.io/blog/2012/02/16/bulid-blog-by-octopress/">思考的轨迹</a></li>
-<li><a href="http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/">唐巧的技术博客</a></li>
-</ul>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
+    
+      <a class="prev" href="/posts/2">&larr; Older</a>
     
     <a href="/blog/archives">Blog Archives</a>
     
@@ -781,6 +734,10 @@ bundle install
     <section>
   <h1>Recent Posts</h1>
   <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/">iOS&amp;Android 播放透明视频</a>
+      </li>
     
       <li class="post">
         <a href="/blog/2016/12/31/dao-chu-di-si-ni-le-pai-tong-li-de-zhao-pian/">导出迪斯尼乐拍通里的照片</a>
@@ -796,10 +753,6 @@ bundle install
     
       <li class="post">
         <a href="/blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/">Charles+Surge解决抓包和翻墙的冲突问题</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi/">Charles Map Local功能实现接口本地调试</a>
       </li>
     
   </ul>

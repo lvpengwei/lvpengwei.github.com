@@ -5,12 +5,14 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>Charles+Surge解决抓包和翻墙的冲突问题 - lvpengwei’s Blog</title>
+  <title>iOS&amp;Android 播放透明视频 - lvpengwei’s Blog</title>
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="平常做iOS开发的时候经常使用ShadowsocksX来翻墙查资料, 使用Charles来抓包debug. 但是两个软件不能同时开, 一直想不到什么好的解决办法. Surge特点是: 支持翻墙, 但是抓包的request和response不够详细.
-Mac版的Surge还要自己配置Web &hellip;">
+  <meta name="description" content="在 iOS &amp; Android 上播放带 alpha 的 mp4 视频，用来代替序列帧动画(png/webp)，素材小，播放也流畅。 用滤镜就可以完成，Demo 地址：
+iOS
+Android 如何使用 AE 制作带 alpha 的 mp4
+">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -19,7 +21,7 @@ Mac版的Surge还要自己配置Web &hellip;">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://lvpengwei.github.io//blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/">
+  <link rel="canonical" href="http://lvpengwei.github.io//blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="lvpengwei’s Blog" type="application/atom+xml">
@@ -80,7 +82,7 @@ Mac版的Surge还要自己配置Web &hellip;">
   
   <header>
     
-      <h1 class="entry-title">Charles+Surge解决抓包和翻墙的冲突问题</h1>
+      <h1 class="entry-title">iOS&amp;Android 播放透明视频</h1>
     
     
       <p class="meta">
@@ -89,7 +91,7 @@ Mac版的Surge还要自己配置Web &hellip;">
 
 
 
-<time class='entry-date' datetime='2016-02-16T23:34:49+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>16</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>11:34 pm</span></time>
+<time class='entry-date' datetime='2019-07-08T21:49:54+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:49 pm</span></time>
         
            | <a href="#disqus_thread"
              data-disqus-identifier="http://lvpengwei.github.io/">Comments</a>
@@ -99,25 +101,13 @@ Mac版的Surge还要自己配置Web &hellip;">
   </header>
 
 
-<div class="entry-content"><p>平常做iOS开发的时候经常使用<code>ShadowsocksX</code>来翻墙查资料, 使用<code>Charles</code>来抓包debug. 但是两个软件不能同时开, 一直想不到什么好的解决办法.</p>
+<div class="entry-content"><p>在 iOS &amp; Android 上播放带 alpha 的 mp4 视频，用来代替序列帧动画(png/webp)，素材小，播放也流畅。</p>
 
-<p><code>Surge</code>特点是: 支持翻墙, 但是抓包的request和response不够详细.
-Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web Proxy(HTTPS)</code>.</p>
+<p>用滤镜就可以完成，Demo 地址：<br/>
+<a href="https://github.com/lvpengwei/AlphaVideoiOS">iOS</a><br/>
+<a href="https://github.com/lvpengwei/ExoPlayerFilter">Android</a></p>
 
-<p>然后我就查了一下<code>Charles</code>的菜单, 发现了<code>External Proxy Setting</code>, 然后发现刚好支持<code>Web Proxy(HTTP)</code>和<code>Secure Web Proxy(HTTPS)</code>, 配好调试, 果然成功. 然后手机上再设置成<code>Charles</code>的<code>Web Proxy(HTTP)</code>, 也是可以抓包和翻墙的.</p>
-
-<p><code>Charles</code>特点是: 抓包的request和response很详细, 但是<code>External Proxy Setting</code>支持的protocol比较少.</p>
-
-<p><code>Charles</code>和<code>Surge</code>结合起来就很完美的解决了我这个问题.</p>
-
-<p>再简化一步, 就直接用手机上的<code>Surge</code>生成一个<code>Web Proxy(HTTP)</code>的config, 这样就不用每次去系统设置里手动设置了(每次敲好麻烦), 这样每次进入公司, 电脑上开着<code>Charles</code>和Mac版的<code>Surge</code>, 手机上起着<code>Surge</code>, 两个设备都可以被抓包和翻墙, 妈妈再也不用担心我在<code>ShadowsocksX</code>和<code>Charles</code>这两个软件之间来回切换了.</p>
-
-<p>附几张比较重要的图:
-<code>Charles</code>的<code>External Proxy Setting</code>
-<img src="/images/20160216/51F279D2-6924-4BB8-A230-48C693F2CE96.png" alt="51F279D2-6924-4BB8-A230-48C693F2CE96.png" /></p>
-
-<p>手机上的Surge的<code>Web Proxy(HTTP)</code>的config
-<img src="/images/20160216/IMG_1261.png" width="500" alt="IMG_1261.png" /></p>
+<p><a href="https://felgo.com/doc/felgo-alphavideo/#how-to-create-an-alpha-video">如何使用 AE 制作带 alpha 的 mp4</a></p>
 </div>
 
 
@@ -133,7 +123,7 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
 
 
 
-<time class='entry-date' datetime='2016-02-16T23:34:49+08:00'><span class='date'><span class='date-month'>Feb</span> <span class='date-day'>16</span><span class='date-suffix'>th</span>, <span class='date-year'>2016</span></span> <span class='time'>11:34 pm</span></time>
+<time class='entry-date' datetime='2019-07-08T21:49:54+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:49 pm</span></time>
       
 
 
@@ -148,10 +138,8 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
     
     <p class="meta">
       
-        <a class="basic-alignment left" href="/blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi/" title="Previous Post: Charles Map Local功能实现接口本地调试">&laquo; Charles Map Local功能实现接口本地调试</a>
+        <a class="basic-alignment left" href="/blog/2016/12/31/dao-chu-di-si-ni-le-pai-tong-li-de-zhao-pian/" title="Previous Post: 导出迪斯尼乐拍通里的照片">&laquo; 导出迪斯尼乐拍通里的照片</a>
       
-      
-        <a class="basic-alignment right" href="/blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/" title="Next Post: Android坐标系学习案例(与iOS进行对比)">Android坐标系学习案例(与iOS进行对比) &raquo;</a>
       
     </p>
   </footer>
@@ -246,8 +234,8 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
       
         
         // var disqus_developer = 1;
-        var disqus_identifier = 'http://lvpengwei.github.io//blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/';
-        var disqus_url = 'http://lvpengwei.github.io//blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/';
+        var disqus_identifier = 'http://lvpengwei.github.io//blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/';
+        var disqus_url = 'http://lvpengwei.github.io//blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/';
         var disqus_script = 'embed.js';
       
     (function () {
