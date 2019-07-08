@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://www.lvpengwei.com/sitemap.xml 
+Sitemap: http://lvpengwei.github.io//sitemap.xml 
