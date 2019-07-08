@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[lvpengwei’s Blog]]></title>
-  <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
-  <link href="http://lvpengwei.github.io//"/>
-  <updated>2017-01-01T15:02:12+08:00</updated>
-  <id>http://lvpengwei.github.io//</id>
+  <link href="http://www.lvpengwei.com/atom.xml" rel="self"/>
+  <link href="http://www.lvpengwei.com/"/>
+  <updated>2019-07-08T20:54:11+08:00</updated>
+  <id>http://www.lvpengwei.com/</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[导出迪斯尼乐拍通里的照片]]></title>
-    <link href="http://lvpengwei.github.io//blog/2016/12/31/dao-chu-di-si-ni-le-pai-tong-li-de-zhao-pian/"/>
+    <link href="http://www.lvpengwei.com/blog/2016/12/31/dao-chu-di-si-ni-le-pai-tong-li-de-zhao-pian/"/>
     <updated>2016-12-31T20:42:21+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2016/12/31/dao-chu-di-si-ni-le-pai-tong-li-de-zhao-pian</id>
+    <id>http://www.lvpengwei.com/blog/2016/12/31/dao-chu-di-si-ni-le-pai-tong-li-de-zhao-pian</id>
     <content type="html"><![CDATA[<blockquote><p>迪斯尼乐拍通App里面的照片导出收费，而且费用很高，我通过抓包拿到App里面的图片链接然后使用脚本下载解析得到高清的图片（非原图）
 代码：<a href="https://github.com/lvpengwei/Disneyphotopass-export">Disneyphotopass-export</a></p></blockquote>
 
@@ -33,11 +33,11 @@
 <li>使用iOS ImageIO的API去看是不是在图片的exif里面</li>
 <li>然后问了伟哥，是否有方法把一张图片放在另外一张图片里，伟哥说“有好多图片隐写的方法你可以搜一下”   <br/>
 算是找到了这种方案的一个术语-<strong>隐写</strong>，然后发现其中一种隐写方法的解析工具<a href="https://github.com/devttys0/binwalk">binwork</a>，拿出之前下载的图片试一下，果然里面放了两张图片，如下图
-<img src="http://blog.yourdream.cc/usr/uploads/2016/12/1518371723.png" alt="enter image description here" /></li>
+<img src="http://www.lvpengwei.com/images/20161231/E7997AA4-F8CF-41E5-A10E-CF3C205B45F1.png" width="500" alt="enter image description here" /></li>
 </ul>
 </li>
 <li><strong>解析</strong>：使用命令可以解出想要的图片<code>dd if=image-download/1 bs=1 skip=10103 of=image/1.jpg</code>
-<img src="http://blog.yourdream.cc/usr/uploads/2016/12/4135483669.png" alt="enter image description here" /></li>
+<img src="http://www.lvpengwei.com/images/20161231/80F75B59-CAC7-427B-9E19-2C31B19BA0DE.png" width="500" alt="enter image description here" /></li>
 </ol>
 
 
@@ -58,15 +58,15 @@
 <h3>链接的收集(Deprecated)</h3>
 
 <p>给手机设上代理，打开乐拍通，进入图片详情，然后一张一张滑过去，然后过滤一下，全选，右击，Copy URLs，然后粘在一个<code>disneyphotopass</code>文档里，执行脚本，就可以了。
-<img src="http://blog.yourdream.cc/usr/uploads/2016/12/317483537.png" alt="enter image description here" /></p>
+<img src="http://www.lvpengwei.com/images/20161231/8E02B64D-EC99-438C-B354-3F87C3DCB6BE.png" width="500" alt="enter image description here" /></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[iOS APP的简单Web Interface应用]]></title>
-    <link href="http://lvpengwei.github.io//blog/2016/06/13/ios-appde-jian-dan-web-interfaceying-yong/"/>
+    <link href="http://www.lvpengwei.com/blog/2016/06/13/ios-appde-jian-dan-web-interfaceying-yong/"/>
     <updated>2016-06-13T17:28:28+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2016/06/13/ios-appde-jian-dan-web-interfaceying-yong</id>
+    <id>http://www.lvpengwei.com/blog/2016/06/13/ios-appde-jian-dan-web-interfaceying-yong</id>
     <content type="html"><![CDATA[<pre><code>  最近接了一个内部工具开发的需求：运营人员需要生成商品尺码图片，之前他们是用PS做的，现在想让我们做个程序工具化这个过程。
 </code></pre>
 
@@ -164,29 +164,32 @@
 
 <p>项目地址：<a href="https://github.com/lvpengwei/ExportGoodsImage">https://github.com/lvpengwei/ExportGoodsImage</a></p>
 
-<p><img src="http://blog.yourdream.cc/usr/uploads/2016/06/3834834005.png" alt="Simulator Screen Shot Jun 13, 2016, 17.00.33.png" /></p>
+<p><img src="http://www.lvpengwei.com/images/20160613/3834834005.png" width="500" alt="Simulator Screen Shot Jun 13, 2016, 17.00.33.png" /></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Android坐标系学习案例(与iOS进行对比)]]></title>
-    <link href="http://lvpengwei.github.io//blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/"/>
+    <link href="http://www.lvpengwei.com/blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/"/>
     <updated>2016-03-19T01:27:38+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi</id>
+    <id>http://www.lvpengwei.com/blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi</id>
     <content type="html"><![CDATA[<p>问题: 判断parent view中的手势是否出现在旋转之后的subview的范围中的解决方法(iOS&amp;Android)</p>
 
 <p>解决思路: 取出点击位置的point, 然后translate到subview的坐标系中, 判断是否在subview的矩形中即可.</p>
 
 <h2>iOS:</h2>
 
-<p>现象:
-<img src="http://blog.yourdream.cc/usr/uploads/2016/03/2100571732.png" alt="7DBEE162-CB37-44E7-8560-4E50556532DA.png" /></p>
+<p>现象:</p>
 
-<p>代码:
-<img src="http://blog.yourdream.cc/usr/uploads/2016/03/2933493193.png" alt="0FDD8A27-5C7F-48EB-A0DD-853FDA4B846C.png" /></p>
+<p><img src="http://www.lvpengwei.com/images/20160319/7DBEE162-CB37-44E7-8560-4E50556532DA.png" width="500" alt="7DBEE162-CB37-44E7-8560-4E50556532DA.png" /></p>
 
-<p>结果:
-<img src="http://blog.yourdream.cc/usr/uploads/2016/03/1751422177.png" alt="78067F60-E64B-4FFB-AA67-68783D824B32.png" /></p>
+<p>代码:</p>
+
+<p><img src="http://www.lvpengwei.com/images/20160319/0FDD8A27-5C7F-48EB-A0DD-853FDA4B846C.png" width="500" alt="0FDD8A27-5C7F-48EB-A0DD-853FDA4B846C.png" /></p>
+
+<p>结果:</p>
+
+<p><img src="http://www.lvpengwei.com/images/20160319/78067F60-E64B-4FFB-AA67-68783D824B32.png" width="500" alt="78067F60-E64B-4FFB-AA67-68783D824B32.png" /></p>
 
 <p>部分解释: iOS中的view有frame/bounds/center/transform等坐标属性,</p>
 
@@ -218,22 +221,26 @@
 
 
 <p>解决思路还是上面所述, 但是取出点击的point容易, translate到subview的坐标系中遇到了一些问题, iOS中此api存在于UIView中, 而Android的View却没有. 搜索一圈, 还是在Android的事件分发的源码中获取答案.
-现象:
-<img src="http://blog.yourdream.cc/usr/uploads/2016/03/4071683902.png" alt="A5809894-B554-433E-B603-172DC01AEB93.png" /></p>
+现象:</p>
 
-<p>代码:
-<img src="http://blog.yourdream.cc/usr/uploads/2016/03/2280097835.png" alt="B7B8A792-4D22-4EDF-B672-A96C1A5FCCA4.png" /></p>
+<p><img src="http://www.lvpengwei.com/images/20160319/A5809894-B554-433E-B603-172DC01AEB93.png" width="500" alt="A5809894-B554-433E-B603-172DC01AEB93.png" /></p>
+
+<p>代码:</p>
+
+<p><img src="http://www.lvpengwei.com/images/20160319/B7B8A792-4D22-4EDF-B672-A96C1A5FCCA4.png" width="500" alt="B7B8A792-4D22-4EDF-B672-A96C1A5FCCA4.png" /></p>
 
 <p>布局代码:</p>
 
-<p><img src="http://blog.yourdream.cc/usr/uploads/2016/03/2828618216.png" alt="007A1AED-36E2-4A51-B5CA-7970D56DC40C.png" /></p>
+<p><img src="http://www.lvpengwei.com/images/20160319/007A1AED-36E2-4A51-B5CA-7970D56DC40C.png" width="500" alt="007A1AED-36E2-4A51-B5CA-7970D56DC40C.png" /></p>
 
-<p>结果:
-<img src="http://blog.yourdream.cc/usr/uploads/2016/03/240624671.png" alt="2C8C9B9F-FD20-4986-BE8B-BAAA346943FD.png" /></p>
+<p>结果:</p>
+
+<p><img src="http://www.lvpengwei.com/images/20160319/2C8C9B9F-FD20-4986-BE8B-BAAA346943FD.png" width="500" alt="2C8C9B9F-FD20-4986-BE8B-BAAA346943FD.png" /></p>
 
 <p>部分解释:
-代码部分借鉴了Android源码.
-<img src="http://blog.yourdream.cc/usr/uploads/2016/03/3174007967.png" alt="069605CE-BF37-4BDA-B054-0514E4090EA4.png" /></p>
+代码部分借鉴了Android源码.</p>
+
+<p><img src="http://www.lvpengwei.com/images/20160319/069605CE-BF37-4BDA-B054-0514E4090EA4.png" width="500" alt="069605CE-BF37-4BDA-B054-0514E4090EA4.png" /></p>
 
 <ol>
 <li>先deep copy出一份新的event.</li>
@@ -257,9 +264,9 @@
   
   <entry>
     <title type="html"><![CDATA[Charles+Surge解决抓包和翻墙的冲突问题]]></title>
-    <link href="http://lvpengwei.github.io//blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/"/>
+    <link href="http://www.lvpengwei.com/blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/"/>
     <updated>2016-02-16T23:34:49+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti</id>
+    <id>http://www.lvpengwei.com/blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti</id>
     <content type="html"><![CDATA[<p>平常做iOS开发的时候经常使用<code>ShadowsocksX</code>来翻墙查资料, 使用<code>Charles</code>来抓包debug. 但是两个软件不能同时开, 一直想不到什么好的解决办法.</p>
 
 <p><code>Surge</code>特点是: 支持翻墙, 但是抓包的request和response不够详细.
@@ -275,42 +282,42 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
 
 <p>附几张比较重要的图:
 <code>Charles</code>的<code>External Proxy Setting</code>
-<img src="http://blog.yourdream.cc/usr/uploads/2016/02/3866250793.png" alt="51F279D2-6924-4BB8-A230-48C693F2CE96.png" /></p>
+<img src="http://www.lvpengwei.com/images/20160216/51F279D2-6924-4BB8-A230-48C693F2CE96.png" alt="51F279D2-6924-4BB8-A230-48C693F2CE96.png" /></p>
 
 <p>手机上的Surge的<code>Web Proxy(HTTP)</code>的config
-<img src="http://blog.yourdream.cc/usr/uploads/2016/02/567163980.png" alt="IMG_1261.png" /></p>
+<img src="http://www.lvpengwei.com/images/20160216/IMG_1261.png" width="500" alt="IMG_1261.png" /></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[Charles Map Local功能实现接口本地调试]]></title>
-    <link href="http://lvpengwei.github.io//blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi/"/>
+    <link href="http://www.lvpengwei.com/blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi/"/>
     <updated>2016-01-17T14:31:17+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi</id>
+    <id>http://www.lvpengwei.com/blog/2016/01/17/charles-map-localgong-neng-shi-xian-jie-kou-ben-di-diao-shi</id>
     <content type="html"><![CDATA[<p>找到指定接口
-<img src="http://blog.yourdream.cc/usr/uploads/2016/01/1856358483.jpeg" alt="8FC03A50-82B0-4EF5-A8B0-2B9A4677B151.jpeg" /></p>
+<img src="http://www.lvpengwei.com/images/20160117/8FC03A50-82B0-4EF5-A8B0-2B9A4677B151.jpeg" alt="8FC03A50-82B0-4EF5-A8B0-2B9A4677B151.jpeg" /></p>
 
 <p>右击链接, 出现菜单, 选择Map Local&hellip;; 修改query和Local Path
-<img src="http://blog.yourdream.cc/usr/uploads/2016/01/2348193668.jpeg" alt="FD22D43A-AF1D-4C2C-994B-9385FC011E46.jpeg" /></p>
+<img src="http://www.lvpengwei.com/images/20160117/FD22D43A-AF1D-4C2C-994B-9385FC011E46.jpeg" alt="FD22D43A-AF1D-4C2C-994B-9385FC011E46.jpeg" /></p>
 
 <p>选择顶部菜单Tools->Rewrite&hellip;, 并添加新的Rule
-<img src="http://blog.yourdream.cc/usr/uploads/2016/01/4070059063.jpeg" alt="078F326F-E5FD-4FF4-8ECF-2433B325C052.jpeg" /></p>
+<img src="http://www.lvpengwei.com/images/20160117/078F326F-E5FD-4FF4-8ECF-2433B325C052.jpeg" alt="078F326F-E5FD-4FF4-8ECF-2433B325C052.jpeg" /></p>
 
 <p>编辑新的Rule
-<img src="http://blog.yourdream.cc/usr/uploads/2016/01/1196373639.jpeg" alt="6760FEA7-12FE-4F0A-B3C4-562C290738C5.jpeg" /></p>
+<img src="http://www.lvpengwei.com/images/20160117/6760FEA7-12FE-4F0A-B3C4-562C290738C5.jpeg" alt="6760FEA7-12FE-4F0A-B3C4-562C290738C5.jpeg" /></p>
 
 <p>结果
-<img src="http://blog.yourdream.cc/usr/uploads/2016/01/1097008502.jpeg" alt="B38D253F-CB3B-4719-BAEC-0CC626FC6290.jpeg" /></p>
+<img src="http://www.lvpengwei.com/images/20160117/B38D253F-CB3B-4719-BAEC-0CC626FC6290.jpeg" alt="B38D253F-CB3B-4719-BAEC-0CC626FC6290.jpeg" /></p>
 
-<p><img src="http://blog.yourdream.cc/usr/uploads/2016/01/2757025431.jpeg" alt="E397F8AC-D864-40DF-ACA5-60753D5D60FD.jpeg" /></p>
+<p><img src="http://www.lvpengwei.com/images/20160117/E397F8AC-D864-40DF-ACA5-60753D5D60FD.jpeg" alt="E397F8AC-D864-40DF-ACA5-60753D5D60FD.jpeg" /></p>
 ]]></content>
   </entry>
   
   <entry>
     <title type="html"><![CDATA[穿衣助手iOS团队开发流程转变]]></title>
-    <link href="http://lvpengwei.github.io//blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian/"/>
+    <link href="http://www.lvpengwei.com/blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian/"/>
     <updated>2015-12-29T22:18:57+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian</id>
+    <id>http://www.lvpengwei.com/blog/2015/12/29/chuan-yi-zhu-shou-iostuan-dui-kai-fa-liu-cheng-zhuan-bian</id>
     <content type="html"><![CDATA[<h2>原来的开发模式</h2>
 
 <p>团队使用敏捷开发模式</p>
@@ -371,9 +378,9 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
   
   <entry>
     <title type="html"><![CDATA[iOS应用中如何获取启动图]]></title>
-    <link href="http://lvpengwei.github.io//blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/"/>
+    <link href="http://www.lvpengwei.com/blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu/"/>
     <updated>2015-12-23T10:32:14+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu</id>
+    <id>http://www.lvpengwei.com/blog/2015/12/23/iosying-yong-zhong-ru-he-huo-qu-qi-dong-tu</id>
     <content type="html"><![CDATA[<p>可以在文档中搜索<code>UILaunchImages</code>和<code>UILaunchImageFile</code>这两个关键字。</p>
 
 <!--more-->
@@ -408,9 +415,9 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
   
   <entry>
     <title type="html"><![CDATA[iOS错误日志分析]]></title>
-    <link href="http://lvpengwei.github.io//blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/"/>
+    <link href="http://www.lvpengwei.com/blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/"/>
     <updated>2015-12-23T10:20:55+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi</id>
+    <id>http://www.lvpengwei.com/blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi</id>
     <content type="html"><![CDATA[<p>穿衣助手iOS使用umeng来做错误日志统计，下面介绍一下如何通过lldb和错误日志定位崩溃位置。</p>
 
 <!--more-->
@@ -443,9 +450,9 @@ umeng中64位crash的log中发现slide address跟以前的不一样，所以不�
   
   <entry>
     <title type="html"><![CDATA[Learn Git]]></title>
-    <link href="http://lvpengwei.github.io//blog/2014/03/10/learn-git/"/>
+    <link href="http://www.lvpengwei.com/blog/2014/03/10/learn-git/"/>
     <updated>2014-03-10T17:55:47+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2014/03/10/learn-git</id>
+    <id>http://www.lvpengwei.com/blog/2014/03/10/learn-git</id>
     <content type="html"><![CDATA[<h1>学习git之后的总结(心得)</h1>
 
 <p>之前骊住项目管理是用svn，后来服务器中项目丢失，导致svn无法再进行管理项目，又通过github发现git的强大。于是用了2天时间自学git基础，之后断断续续用了一周时间去实践搭建git服务器。</p>
@@ -489,9 +496,9 @@ git 参考教程 :<br/>
   
   <entry>
     <title type="html"><![CDATA[我的第一篇博客]]></title>
-    <link href="http://lvpengwei.github.io//blog/2014/03/02/my-first-blog/"/>
+    <link href="http://www.lvpengwei.com/blog/2014/03/02/my-first-blog/"/>
     <updated>2014-03-02T15:24:36+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2014/03/02/my-first-blog</id>
+    <id>http://www.lvpengwei.com/blog/2014/03/02/my-first-blog</id>
     <content type="html"><![CDATA[<p><strong>首先介绍一下blog搭建历程。</strong></p>
 
 <p>博客管理工具：<a href="octopress.org">octopress</a></p>
