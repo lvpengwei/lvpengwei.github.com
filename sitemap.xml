@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://lvpengwei.github.io//blog/2019/07/08/app-duo-qu-yu-pi-fu-(zhu-ti-)de-shi-xian/</loc>
+<lastmod>2019-07-08T21:58:47+08:00</lastmod>
+</url>
+<url>
 <loc>http://lvpengwei.github.io//blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/</loc>
 <lastmod>2019-07-08T21:49:54+08:00</lastmod>
 </url>
@@ -49,5 +53,8 @@
 </url>
 <url>
 <loc>http://lvpengwei.github.io//blog/archives/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//posts/2/</loc>
 </url>
 </urlset>

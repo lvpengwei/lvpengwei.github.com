@@ -9,10 +9,9 @@
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="在 iOS &amp; Android 上播放带 alpha 的 mp4 视频，用来代替序列帧动画(png/webp)，素材小，播放也流畅。 用滤镜就可以完成，Demo 地址：
-iOS
-Android 如何使用 AE 制作带 alpha 的 mp4
-">
+  <meta name="description" content="需求 App 里可以皮肤化的 UI 区域分为 3 块（App 皮肤/阅读器主题/其他），这 3 块又和黑夜模式有重叠。 App 皮肤区域有首页 4 个 tab bar 页面（还没有实现主题化，在规划中）
+阅读器主题区域主要是阅读器相关的设置和菜单页面
+其他指不需要主题化的区域 第一种方案 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +78,75 @@ Android 如何使用 AE 制作带 alpha 的 mp4
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2019/07/08/app-duo-qu-yu-pi-fu-(zhu-ti-)de-shi-xian/">App 多区域皮肤（主题）的实现</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2019-07-08T21:58:47+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:58 pm</span></time>
+        
+           | <a href="/blog/2019/07/08/app-duo-qu-yu-pi-fu-(zhu-ti-)de-shi-xian/#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io//blog/2019/07/08/app-duo-qu-yu-pi-fu-(zhu-ti-)de-shi-xian/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>需求</h2>
+
+<p>App 里可以皮肤化的 UI 区域分为 3 块（App 皮肤/阅读器主题/其他），这 3 块又和黑夜模式有重叠。</p>
+
+<ul>
+<li>App 皮肤区域有首页 4 个 tab bar 页面（还没有实现主题化，在规划中）</li>
+<li>阅读器主题区域主要是阅读器相关的设置和菜单页面</li>
+<li>其他指不需要主题化的区域</li>
+</ul>
+
+
+<p><img src="https://i.loli.net/2019/03/31/5ca0a5f084143.png" alt="" /></p>
+
+<h2>第一种方案</h2>
+
+<p>主要思路就是给 UIKit 的 Category 增加一些属性，配置每一类主题的 key，在第一次赋值或者收到主题改变的通知时进行 apply。</p>
+
+<p><img src="https://i.loli.net/2019/03/31/5ca0a5f08618e.png" alt="" />
+<img src="https://i.loli.net/2019/03/28/5c9c9e7aec27f.png" alt="" /></p>
+
+<blockquote><p>qd 是黑夜模式前缀，readerTheme 是阅读器主题前缀</p></blockquote>
+
+<p>这种方案的问题是
+- 如果要增加一类主题（比如 App 皮肤类），需要把所有之前增加的属性都 copy 一下（包括 apply 部分的代码），工作量很大。
+- 如果要增加一个新的属性，需要添加多遍（前缀分别是qd/readerTheme/app）。</p>
+
+<h2>重构之后的方案</h2>
+
+<blockquote><p>借助 OC 的泛型和  KVC 的一次重构</p></blockquote>
+
+<p><img src="https://i.loli.net/2019/03/31/5ca0a5f095a1a.png" alt="" />
+<img src="https://i.loli.net/2019/04/17/5cb6d05c376eb.jpg" alt="" /></p>
+
+<h2>重构前后对比</h2>
+
+<p><img src="https://ws3.sinaimg.cn/large/005BYqpggy1g1mx1031r9j31d30u07u7.jpg" alt="" /></p>
+
+<p>代码实现样例：<a href="https://github.com/lvpengwei/LVThemeKit">LVThemeKit</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -652,75 +720,6 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2014/03/10/learn-git/">Learn Git</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2014-03-10T17:55:47+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>10</span><span class='date-suffix'>th</span>, <span class='date-year'>2014</span></span> <span class='time'>5:55 pm</span></time>
-        
-           | <a href="/blog/2014/03/10/learn-git/#disqus_thread"
-             data-disqus-identifier="http://lvpengwei.github.io//blog/2014/03/10/learn-git/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><h1>学习git之后的总结(心得)</h1>
-
-<p>之前骊住项目管理是用svn，后来服务器中项目丢失，导致svn无法再进行管理项目，又通过github发现git的强大。于是用了2天时间自学git基础，之后断断续续用了一周时间去实践搭建git服务器。</p>
-
-<hr />
-
-<h2>git心得(注意事项)</h2>
-
-<p>1.添加删除文件：一个团队中，若某个队员要添加或删除一些文件，操作如下</p>
-
-<blockquote><p><strong>NOTE:</strong></p>
-
-<ul>
-<li>在添加之前，在分支中commit所做的修改，然后切换到master中pull下最新的项目(project.pbxproj有改变的话会导致冲突，可把本地项目中的这个文件先拉到桌面，然后再poll)</li>
-<li>开始添加或删除文件</li>
-<li>push到服务器(包括工程文件project.pbxproj和添加或删除的文件)<br/>
-然后其他队员也要进行添加或删除操作时，进行同样的步骤</li>
-</ul>
-</blockquote>
-
-<p>2.尽量多建分支(branch)<br/>
-3.把一次功能修改的文件分多次提交(主要是为了更加详细，清楚都进行了哪些操作)  这个是在代码中注释的另一种体现</p>
-
-<p>2014-05-15 更新</p>
-
-<p>xcode工程文件冲突解决办法之一：对项目中的文件进行排序。</p>
-
-<p>1.添加排序脚本sort-Xcode-project-file(排序命令：perl -w sort-Xcode-project-file)</p>
-
-<p>2.添加脚本到build phases(可选)</p>
-
-<h2>后记</h2>
-
-<p>git 标准<a href="http://www.gitignore.io/api/xcode,objective-c">gitignore</a>文件(for iOS project)
-git 常见冲突 <a href="http://www.shanhh.com/blog/2013/01/30/git_FAQ/">解决方案</a><br/>
-git 参考教程 :<br/>
-<a href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000/0013744142037508cf42e51debf49668810645e02887691000">Git教程 - 廖雪峰的官方网站</a><br/>
-<a href="http://git-scm.com/book/zh/%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E7%9A%84-Git-%E6%9E%B6%E8%AE%BE%E6%9C%8D%E5%8A%A1%E5%99%A8">Git - 架设服务器</a></p>
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -736,6 +735,10 @@ git 参考教程 :<br/>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2019/07/08/app-duo-qu-yu-pi-fu-(zhu-ti-)de-shi-xian/">App 多区域皮肤（主题）的实现</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/">iOS&amp;Android 播放透明视频</a>
       </li>
     
@@ -749,10 +752,6 @@ git 参考教程 :<br/>
     
       <li class="post">
         <a href="/blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/">Android坐标系学习案例(与iOS进行对比)</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/02/16/charles-plus-surgejie-jue-zhua-bao-he-fan-qiang-de-chong-tu-wen-ti/">Charles+Surge解决抓包和翻墙的冲突问题</a>
       </li>
     
   </ul>
