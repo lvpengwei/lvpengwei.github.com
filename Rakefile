@@ -9,10 +9,10 @@ ssh_port       = "22"
 document_root  = "~/website.com/"
 rsync_delete   = false
 rsync_args     = ""  # Any extra arguments to pass to rsync
-deploy_default = "rsync"
+deploy_default = "push"
 
 # This will be configured for you when you run config_deploy
-deploy_branch  = "gh-pages"
+deploy_branch  = "master"
 
 ## -- Misc Configs -- ##
 
@@ -187,8 +187,8 @@ task :update_style, :theme do |t, args|
   end
   mv "sass", "sass.old"
   puts "## Moved styles into sass.old/"
-  cp_r "#{themes_dir}/"+theme+"/sass/", "sass", :remove_destination=>true
-  cp_r "sass.old/custom/.", "sass/custom/", :remove_destination=>true
+  cp_r "#{themes_dir}/"+theme+"/sass/", "sass"
+  cp_r "sass/custom/.", "sass.old/custom"
   puts "## Updated Sass ##"
 end
 

@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: 
+
+Sitemap: http://devlvpw.github.io/sitemap.xml 

@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[lvpw’s Blog]]></title>
+  <link href="http://devlvpw.github.io/atom.xml" rel="self"/>
+  <link href="http://devlvpw.github.io/"/>
+  <updated>2014-03-10T18:18:06+08:00</updated>
+  <id>http://devlvpw.github.io/</id>
+  <author>
+    <name><![CDATA[lvpw]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Learn Git]]></title>
+    <link href="http://devlvpw.github.io/blog/2014/03/10/learn-git/"/>
+    <updated>2014-03-10T17:55:47+08:00</updated>
+    <id>http://devlvpw.github.io/blog/2014/03/10/learn-git</id>
+    <content type="html"><![CDATA[<h1>学习git之后的总结(心得)</h1>
+
+<p>之前骊住项目管理是用svn，后来服务器中项目丢失，导致svn无法再进行管理项目，又通过github发现git的强大。于是用了2天时间自学git基础，之后断断续续用了一周时间去实践搭建git服务器。</p>
+
+<hr />
+
+<h2>git心得(注意事项)</h2>
+
+<p>1.添加删除文件：一个团队中，若某个队员要添加或删除一些文件，操作如下</p>
+
+<blockquote><p><strong>NOTE:</strong></p>
+
+<ul>
+<li>在添加之前，在分支中commit所做的修改，然后切换到master中pull下最新的项目</li>
+<li>开始添加或删除文件</li>
+<li>push到服务器(包括工程文件project.pbxproj和添加或删除的文件)
+                          然后其他队员也要进行添加或删除操作时，进行同样的步骤</li>
+</ul>
+</blockquote>
+
+<p>2.尽量多建分支(branch)<br/>
+3.把一次功能修改的文件分多次提交(主要是为了更加详细，清楚都进行了哪些操作)  这个是在代码中注释的另一种体现</p>
+
+<h2>后记</h2>
+
+<p>git 标准<a href="http://www.gitignore.io/api/xcode,objective-c">gitignore</a>文件(for iOS project)
+git 常见冲突 <a href="http://www.shanhh.com/blog/2013/01/30/git_FAQ/">解决方案</a><br/>
+git 参考教程 :<br/>
+<a href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000/0013744142037508cf42e51debf49668810645e02887691000">Git教程 &ndash; 廖雪峰的官方网站</a><br/>
+<a href="http://git-scm.com/book/zh/%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E7%9A%84-Git-%E6%9E%B6%E8%AE%BE%E6%9C%8D%E5%8A%A1%E5%99%A8">Git &ndash; 架设服务器</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[我的第一篇博客]]></title>
+    <link href="http://devlvpw.github.io/blog/2014/03/02/my-first-blog/"/>
+    <updated>2014-03-02T15:24:36+08:00</updated>
+    <id>http://devlvpw.github.io/blog/2014/03/02/my-first-blog</id>
+    <content type="html"><![CDATA[<p><strong>首先介绍一下blog搭建历程。</strong></p>
+
+<p>博客管理工具：<a href="octopress.org">octopress</a></p>
+
+<p>当然第一步你得先安装并了解Git. (<a href="http://git-scm.com/">Install Git</a>)</p>
+
+<p>首先要安装<strong>ruby</strong>，当初我是通过rvm来安装，后来出现了一堆麻烦，所以就放弃了这条路，改为HomeBrew->rbenv->ruby。基本不需要配置环境。</p>
+
+<p>1.<a href="http://brew.sh/index_zh-cn.html">安装Homebrew</a>
+2.<a href="http://octopress.org/docs/setup/rbenv/">安装rbenv</a>：Alternate Installation Using Homebrew<br/>
+3.<a href="http://octopress.org/docs/setup/rbenv/">安装Ruby</a>：Install Ruby 1.9.3</p>
+
+<pre><code>ruby --version //查看ruby版本
+</code></pre>
+
+<p><strong>安装Octopress</strong></p>
+
+<pre><code>git clone git://github.com/imathis/octopress.git octopress
+cd octopress  
+</code></pre>
+
+<p>然后安装依赖</p>
+
+<pre><code>gem install bundler
+rbenv rehash    # If you use rbenv, rehash to be able to run the bundle command
+bundle install
+</code></pre>
+
+<p>最后安装Octopress</p>
+
+<pre><code>rake install
+</code></pre>
+
+<p>简单配置：主要修改_config.yml，这个配置文件都有相应的注释。主要就是改一些博客头，作者名之类的东西。 注意最好把里面的twitter相关的信息全部删掉，否则由于GFW的原因，将会造成页面load很慢。(from <a href="http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/">唐巧</a>)</p>
+
+<p><strong>写博客方法</strong></p>
+
+<ul>
+<li>rake new_post[‘article name’] 生成博文框架，然后修改生成的文件即可</li>
+<li>rake generate 生成静态文件</li>
+<li>rake preview 在本机4000端口生成访问内容</li>
+<li>rake deploy 发布文件</li>
+</ul>
+
+
+<p>博客内容是采用markdown语法，所以需要熟悉一下常用的标签。我用的是Google Chrome的插件&mdash;Minimalist Markdown Editor</p>
+
+<p><strong>高级配置还没有测试，下次更新！</strong></p>
+
+<p><strong>参考</strong></p>
+
+<ul>
+<li><a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a></li>
+<li><a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a></li>
+<li><a href="http://beyondvincent.com/blog/2013/08/03/108-creating-a-github-blog-using-octopress/">破船之家</a></li>
+<li><a href="http://shanewfx.github.io/blog/2012/02/16/bulid-blog-by-octopress/">思考的轨迹</a></li>
+<li><a href="http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/">唐巧的技术博客</a></li>
+</ul>
+
+]]></content>
+  </entry>
+  
+</feed>
