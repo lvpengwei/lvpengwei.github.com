@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Skia | lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//blog/categories/skia/atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2020-03-07T11:19:58+08:00</updated>
+  <updated>2020-03-07T11:26:45+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -76,8 +76,8 @@ skImage = SkImage::MakeFromNV12TexturesCopy(grContext,
                                             nullptr);
 </code></pre>
 
-<p><img src="https://i.loli.net/2020/03/07/GvoX24E8ctDuYje.png" alt="图1" />
-<img src="https://i.loli.net/2020/03/07/ZAJxE3nkD85Gfh6.png" alt="图2" /></p>
+<p><img src="/images/20200307/nv12_ra.png" alt="图1" />
+<img src="/images/20200307/nv12_rg.png" alt="图2" /></p>
 
 <h1>查问题</h1>
 
