@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Nv12 | lvpengwei’s Blog]]></title>
+  <link href="http://lvpengwei.github.io//blog/categories/nv12/atom.xml" rel="self"/>
+  <link href="http://lvpengwei.github.io//"/>
+  <updated>2020-03-07T11:14:15+08:00</updated>
+  <id>http://lvpengwei.github.io//</id>
+  <author>
+    <name><![CDATA[lvpengwei]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[iOS NV12转SkImage颜色不正常的问题]]></title>
+    <link href="http://lvpengwei.github.io//blog/2020/03/07/ios-nv12zhuan-skimageyan-se-bu-zheng-chang-de-wen-ti/"/>
+    <updated>2020-03-07T11:01:32+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2020/03/07/ios-nv12zhuan-skimageyan-se-bu-zheng-chang-de-wen-ti</id>
+    <content type="html"><![CDATA[<h1>环境</h1>
+
+<p>设备：iPhone 6s<br/>
+系统：13.1<br/>
+Skia版本：m62<br/>
+视频的YUV ColorSpace：ITU-R BT.601</p>
+
+<h1>现象</h1>
+
+<p>VideoToolbox 配置的 pixelFormat 是<code>kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange</code>，然后把输出的 pixelBuffer 用下面的代码片段1转成 NV12，再使用代码片段2转成 SkImage，在 SkCanvas 上 draw 出来如图1，视频原图如图2。</p>
+
+<pre><code class="objc">uint32_t pixelFormatType = kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange;
+</code></pre>
+
+<pre><code class="objc">// 代码片段1
+// Y 数据
+CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                             textCache,
+                                             pixelBuffer,
+                                             NULL,
+                                             GL_TEXTURE_2D,
+                                             GL_LUMINANCE,
+                                             width,
+                                             height,
+                                             GL_LUMINANCE,
+                                             GL_UNSIGNED_BYTE,
+                                             0,
+                                             &amp;outputTextureLuma);
+// UV 数据
+CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                             textCache,
+                                             pixelBuffer,
+                                             NULL,
+                                             GL_TEXTURE_2D,
+                                             GL_LUMINANCE_ALPHA,
+                                             width / 2,
+                                             height / 2,
+                                             GL_LUMINANCE_ALPHA,
+                                             GL_UNSIGNED_BYTE,
+                                             1,
+                                             &amp;outputTextureChroma);
+</code></pre>
+
+<pre><code class="cpp">// 代码片段2
+GrGLTextureInfo textureInfo1 = {videoImage-&gt;textureTarget(), videoImage-&gt;getTextureID(0)};
+GrGLTextureInfo textureInfo2 = {videoImage-&gt;textureTarget(), videoImage-&gt;getTextureID(1)};
+GrBackendObject nv12TextureHandles[] = {reinterpret_cast&lt;GrBackendObject&gt;(&amp;textureInfo1),
+                                        reinterpret_cast&lt;GrBackendObject&gt;(&amp;textureInfo2)};
+SkISize nv12Sizes[] = \{\{videoImage-&gt;width(), videoImage-&gt;height()\},
+                       \{videoImage-&gt;width(), videoImage-&gt;height()\}\};
+skImage = SkImage::MakeFromNV12TexturesCopy(grContext,
+                                            kRec601_SkYUVColorSpace,
+                                            nv12TextureHandles,
+                                            nv12Sizes,
+                                            kTopLeft_GrSurfaceOrigin,
+                                            nullptr);
+</code></pre>
+
+<p><img src="https://i.loli.net/2020/03/07/GvoX24E8ctDuYje.png" alt="图1" />
+<img src="https://i.loli.net/2020/03/07/ZAJxE3nkD85Gfh6.png" alt="图2" /></p>
+
+<h1>查问题</h1>
+
+<h4>1. 查视频的 YUV ColorSpace 是否和 SkImage 对应</h4>
+
+<p>是一致的，但输出的图像还是有问题。</p>
+
+<h3>2.试试把 VideoToolbox 的输出格式换成 RGBA</h3>
+
+<p>配置 VideoToolbox 的 pixelFormat 为 <code>kCVPixelFormatType_32BGRA</code>，使用代码片段3把 pixelBuffer 转成 RGBA 纹理，然后使用代码片段4转成 SkImage，图像是正常的。
+<code>objc
+uint32_t pixelFormatType = kCVPixelFormatType_32BGRA;
+</code>
+<code>objc
+// 代码片段3
+CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                             textCache,
+                                             pixelBuffer,
+                                             NULL,
+                                             GL_TEXTURE_2D,
+                                             GL_RGBA,
+                                             width,
+                                             height,
+                                             GL_BGRA,
+                                             GL_UNSIGNED_BYTE,
+                                             0,
+                                             &amp;outputTextureLuma);
+</code>
+<code>cpp
+// 代码片段4
+GrGLTextureInfo textureInfo = {videoImage-&gt;textureTarget(), videoImage-&gt;getTextureID(0)};
+GrBackendTexture backendTexture(videoImage-&gt;width(), videoImage-&gt;height(), kRGBA_8888_GrPixelConfig,
+                                textureInfo);
+skImage =  SkImage::MakeFromTexture(grContext, backendTexture, kTopLeft_GrSurfaceOrigin,
+                                    kPremul_SkAlphaType, nullptr);
+</code></p>
+
+<h3>3.查 Skia 源码</h3>
+
+<pre><code class="cpp">// SkImage_Gpu.cpp
+// SkImage::MakeFromNV12TexturesCopy -&gt; make_from_yuv_textures_copy
+// GrYUVEffect.cpp
+// GrYUVEffect::MakeYUVToRGB -&gt; YUVtoRGBEffect::Make -&gt; YUVtoRGBEffect() -&gt; onCreateGLSLInstance() -&gt; GLSLProcessor -&gt; shader '.rg'
+</code></pre>
+
+<p>从 Skia 的源码中一直跟下去，发现最后 shader 使用的是 <code>rg</code> 通道，而因为我们是用 <code>GL_LUMINANCE_ALPHA</code> 来获取 <code>UV</code> 数据，在 GLSL 中应该使用 <code>ra</code> 通道，所以出现了不一致。当使用<code>GL_RG</code>获取<code>UV</code>数据的时候（代码片段5），SkImage 输出的图片就正常了。
+<code>objc
+// 代码片段5
+// UV 数据
+CVOpenGLESTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                             textCache,
+                                             pixelBuffer,
+                                             NULL,
+                                             GL_TEXTURE_2D,
+                                             GL_RG,
+                                             width / 2,
+                                             height / 2,
+                                             GL_RG,
+                                             GL_UNSIGNED_BYTE,
+                                             1,
+                                             &amp;outputTextureChroma);
+</code></p>
+
+<h1>Link</h1>
+
+<p><a href="https://github.com/google/skia">skia</a><br/>
+<a href="https://juejin.im/entry/5cbac68c6fb9a0688c039ebc">GL 移植到 Metal 的小细节</a></p>
+]]></content>
+  </entry>
+  
+</feed>

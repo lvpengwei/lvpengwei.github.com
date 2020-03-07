@@ -9,9 +9,10 @@
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="需求 App 里可以皮肤化的 UI 区域分为 3 块（App 皮肤/阅读器主题/其他），这 3 块又和黑夜模式有重叠。 App 皮肤区域有首页 4 个 tab bar 页面（还没有实现主题化，在规划中）
-阅读器主题区域主要是阅读器相关的设置和菜单页面
-其他指不需要主题化的区域 第一种方案 &hellip;">
+  <meta name="description" content="环境 设备：iPhone 6s
+系统：13.1
+Skia版本：m62
+视频的YUV ColorSpace：ITU-R BT.601 现象 VideoToolbox 配置的 pixelFormat 是kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange， &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -78,6 +79,253 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2020/03/07/ios-nv12zhuan-skimageyan-se-bu-zheng-chang-de-wen-ti/">iOS NV12转SkImage颜色不正常的问题</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2020-03-07T11:01:32+08:00'><span class='date'><span class='date-month'>Mar</span> <span class='date-day'>7</span><span class='date-suffix'>th</span>, <span class='date-year'>2020</span></span> <span class='time'>11:01 am</span></time>
+        
+           | <a href="/blog/2020/03/07/ios-nv12zhuan-skimageyan-se-bu-zheng-chang-de-wen-ti/#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io//blog/2020/03/07/ios-nv12zhuan-skimageyan-se-bu-zheng-chang-de-wen-ti/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h1>环境</h1>
+
+<p>设备：iPhone 6s<br/>
+系统：13.1<br/>
+Skia版本：m62<br/>
+视频的YUV ColorSpace：ITU-R BT.601</p>
+
+<h1>现象</h1>
+
+<p>VideoToolbox 配置的 pixelFormat 是<code>kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange</code>，然后把输出的 pixelBuffer 用下面的代码片段1转成 NV12，再使用代码片段2转成 SkImage，在 SkCanvas 上 draw 出来如图1，视频原图如图2。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="kt">uint32_t</span> <span class="n">pixelFormatType</span> <span class="o">=</span> <span class="n">kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="c1">// 代码片段1</span>
+</span><span class='line'><span class="c1">// Y 数据</span>
+</span><span class='line'><span class="n">CVOpenGLESTextureCacheCreateTextureFromImage</span><span class="p">(</span><span class="n">kCFAllocatorDefault</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">textCache</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">pixelBuffer</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="nb">NULL</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_TEXTURE_2D</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_LUMINANCE</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">width</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">height</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_LUMINANCE</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_UNSIGNED_BYTE</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="o">&amp;</span><span class="n">outputTextureLuma</span><span class="p">);</span>
+</span><span class='line'><span class="c1">// UV 数据</span>
+</span><span class='line'><span class="n">CVOpenGLESTextureCacheCreateTextureFromImage</span><span class="p">(</span><span class="n">kCFAllocatorDefault</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">textCache</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">pixelBuffer</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="nb">NULL</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_TEXTURE_2D</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_LUMINANCE_ALPHA</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_LUMINANCE_ALPHA</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_UNSIGNED_BYTE</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="mi">1</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="o">&amp;</span><span class="n">outputTextureChroma</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="c1">// 代码片段2</span>
+</span><span class='line'><span class="n">GrGLTextureInfo</span> <span class="n">textureInfo1</span> <span class="o">=</span> <span class="p">{</span><span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">textureTarget</span><span class="p">(),</span> <span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">getTextureID</span><span class="p">(</span><span class="mi">0</span><span class="p">)};</span>
+</span><span class='line'><span class="n">GrGLTextureInfo</span> <span class="n">textureInfo2</span> <span class="o">=</span> <span class="p">{</span><span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">textureTarget</span><span class="p">(),</span> <span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">getTextureID</span><span class="p">(</span><span class="mi">1</span><span class="p">)};</span>
+</span><span class='line'><span class="n">GrBackendObject</span> <span class="n">nv12TextureHandles</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">GrBackendObject</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">textureInfo1</span><span class="p">),</span>
+</span><span class='line'>                                        <span class="k">reinterpret_cast</span><span class="o">&lt;</span><span class="n">GrBackendObject</span><span class="o">&gt;</span><span class="p">(</span><span class="o">&amp;</span><span class="n">textureInfo2</span><span class="p">)};</span>
+</span><span class='line'><span class="n">SkISize</span> <span class="n">nv12Sizes</span><span class="p">[]</span> <span class="o">=</span> <span class="err">\</span><span class="p">{</span><span class="err">\</span><span class="p">{</span><span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">width</span><span class="p">(),</span> <span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">height</span><span class="p">()</span><span class="err">\</span><span class="p">},</span>
+</span><span class='line'>                       <span class="err">\</span><span class="p">{</span><span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">width</span><span class="p">(),</span> <span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">height</span><span class="p">()</span><span class="err">\</span><span class="p">}</span><span class="err">\</span><span class="p">};</span>
+</span><span class='line'><span class="n">skImage</span> <span class="o">=</span> <span class="n">SkImage</span><span class="o">::</span><span class="n">MakeFromNV12TexturesCopy</span><span class="p">(</span><span class="n">grContext</span><span class="p">,</span>
+</span><span class='line'>                                            <span class="n">kRec601_SkYUVColorSpace</span><span class="p">,</span>
+</span><span class='line'>                                            <span class="n">nv12TextureHandles</span><span class="p">,</span>
+</span><span class='line'>                                            <span class="n">nv12Sizes</span><span class="p">,</span>
+</span><span class='line'>                                            <span class="n">kTopLeft_GrSurfaceOrigin</span><span class="p">,</span>
+</span><span class='line'>                                            <span class="k">nullptr</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img src="https://i.loli.net/2020/03/07/GvoX24E8ctDuYje.png" alt="图1" />
+<img src="https://i.loli.net/2020/03/07/ZAJxE3nkD85Gfh6.png" alt="图2" /></p>
+
+<h1>查问题</h1>
+
+<h4>1. 查视频的 YUV ColorSpace 是否和 SkImage 对应</h4>
+
+<p>是一致的，但输出的图像还是有问题。</p>
+
+<h3>2.试试把 VideoToolbox 的输出格式换成 RGBA</h3>
+
+<p>配置 VideoToolbox 的 pixelFormat 为 <code>kCVPixelFormatType_32BGRA</code>，使用代码片段3把 pixelBuffer 转成 RGBA 纹理，然后使用代码片段4转成 SkImage，图像是正常的。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="kt">uint32_t</span> <span class="n">pixelFormatType</span> <span class="o">=</span> <span class="n">kCVPixelFormatType_32BGRA</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="c1">// 代码片段3</span>
+</span><span class='line'><span class="n">CVOpenGLESTextureCacheCreateTextureFromImage</span><span class="p">(</span><span class="n">kCFAllocatorDefault</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">textCache</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">pixelBuffer</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="nb">NULL</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_TEXTURE_2D</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_RGBA</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">width</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">height</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_BGRA</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_UNSIGNED_BYTE</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="o">&amp;</span><span class="n">outputTextureLuma</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="c1">// 代码片段4</span>
+</span><span class='line'><span class="n">GrGLTextureInfo</span> <span class="n">textureInfo</span> <span class="o">=</span> <span class="p">{</span><span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">textureTarget</span><span class="p">(),</span> <span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">getTextureID</span><span class="p">(</span><span class="mi">0</span><span class="p">)};</span>
+</span><span class='line'><span class="n">GrBackendTexture</span> <span class="nf">backendTexture</span><span class="p">(</span><span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">width</span><span class="p">(),</span> <span class="n">videoImage</span><span class="o">-&gt;</span><span class="n">height</span><span class="p">(),</span> <span class="n">kRGBA_8888_GrPixelConfig</span><span class="p">,</span>
+</span><span class='line'>                                <span class="n">textureInfo</span><span class="p">);</span>
+</span><span class='line'><span class="n">skImage</span> <span class="o">=</span>  <span class="n">SkImage</span><span class="o">::</span><span class="n">MakeFromTexture</span><span class="p">(</span><span class="n">grContext</span><span class="p">,</span> <span class="n">backendTexture</span><span class="p">,</span> <span class="n">kTopLeft_GrSurfaceOrigin</span><span class="p">,</span>
+</span><span class='line'>                                    <span class="n">kPremul_SkAlphaType</span><span class="p">,</span> <span class="k">nullptr</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>3.查 Skia 源码</h3>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="c1">// SkImage_Gpu.cpp</span>
+</span><span class='line'><span class="c1">// SkImage::MakeFromNV12TexturesCopy -&gt; make_from_yuv_textures_copy</span>
+</span><span class='line'><span class="c1">// GrYUVEffect.cpp</span>
+</span><span class='line'><span class="c1">// GrYUVEffect::MakeYUVToRGB -&gt; YUVtoRGBEffect::Make -&gt; YUVtoRGBEffect() -&gt; onCreateGLSLInstance() -&gt; GLSLProcessor -&gt; shader &#39;.rg&#39;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>从 Skia 的源码中一直跟下去，发现最后 shader 使用的是 <code>rg</code> 通道，而因为我们是用 <code>GL_LUMINANCE_ALPHA</code> 来获取 <code>UV</code> 数据，在 GLSL 中应该使用 <code>ra</code> 通道，所以出现了不一致。当使用<code>GL_RG</code>获取<code>UV</code>数据的时候（代码片段5），SkImage 输出的图片就正常了。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="c1">// 代码片段5</span>
+</span><span class='line'><span class="c1">// UV 数据</span>
+</span><span class='line'><span class="n">CVOpenGLESTextureCacheCreateTextureFromImage</span><span class="p">(</span><span class="n">kCFAllocatorDefault</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">textCache</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">pixelBuffer</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="nb">NULL</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_TEXTURE_2D</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_RG</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">width</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">height</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_RG</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="n">GL_UNSIGNED_BYTE</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="mi">1</span><span class="p">,</span>
+</span><span class='line'>                                             <span class="o">&amp;</span><span class="n">outputTextureChroma</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h1>Link</h1>
+
+<p><a href="https://github.com/google/skia">skia</a><br/>
+<a href="https://juejin.im/entry/5cbac68c6fb9a0688c039ebc">GL 移植到 Metal 的小细节</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -689,43 +937,6 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/">iOS错误日志分析</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2015-12-23T10:20:55+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>23</span><span class='date-suffix'>rd</span>, <span class='date-year'>2015</span></span> <span class='time'>10:20 am</span></time>
-        
-           | <a href="/blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/#disqus_thread"
-             data-disqus-identifier="http://lvpengwei.github.io//blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>穿衣助手iOS使用umeng来做错误日志统计，下面介绍一下如何通过lldb和错误日志定位崩溃位置。</p>
-
-</div>
-  
-  
-    <footer>
-      <a rel="full-article" href="/blog/2015/12/23/ioscuo-wu-ri-zhi-fen-xi/">Read on &rarr;</a>
-    </footer>
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -741,6 +952,10 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2020/03/07/ios-nv12zhuan-skimageyan-se-bu-zheng-chang-de-wen-ti/">iOS NV12转SkImage颜色不正常的问题</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2019/07/08/app-duo-qu-yu-pi-fu-(zhu-ti-)de-shi-xian/">App 多区域皮肤（主题）的实现</a>
       </li>
     
@@ -754,10 +969,6 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
     
       <li class="post">
         <a href="/blog/2016/06/13/ios-appde-jian-dan-web-interfaceying-yong/">iOS APP的简单Web Interface应用</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2016/03/19/androidzuo-biao-xi-xue-xi-an-li-yu-iosjin-xing-dui-bi/">Android坐标系学习案例(与iOS进行对比)</a>
       </li>
     
   </ul>
@@ -802,7 +1013,7 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2019 - lvpengwei -
+  Copyright &copy; 2020 - lvpengwei -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
