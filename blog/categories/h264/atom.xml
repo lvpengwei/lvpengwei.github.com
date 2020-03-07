@@ -4,7 +4,7 @@
   <title><![CDATA[Category: H264 | lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//blog/categories/h264/atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2020-03-07T11:30:35+08:00</updated>
+  <updated>2020-03-07T14:35:18+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -64,15 +64,24 @@
 
 <h1>sps.vui.max_num_reorder_frames</h1>
 
-<p>取 <code>max_num_reorder_frames</code> 的也有两个，<a href="https://cs.chromium.org/">Chrome</a> 和 <a href="https://github.com/videolan/vlc">vlc</a>。</p>
+<p>取 <code>max_num_reorder_frames</code> 的有三个</p>
+
+<ol>
+<li><a href="https://cs.chromium.org/">Chrome</a></li>
+<li><a href="https://github.com/videolan/vlc">vlc</a></li>
+<li><a href="https://cs.android.com/android/platform/superproject/+/master:external/v4l2_codec2/vda/h264_decoder.cc;l=1042?q=max_num_reorder_frames&amp;ss=android%2Fplatform%2Fsuperproject">MediaCodec</a></li>
+</ol>
+
 
 <h2>Chrome</h2>
 
 <p>Chrome 的主要代码如下，代码文件在<a href="https://cs.chromium.org/chromium/src/media/gpu/mac/vt_video_decode_accelerator_mac.cc?dr=CSs&amp;q=vt_video_decode_accelerator_mac&amp;g=0&amp;l=262">vt_video_decode_accelerator_mac.cc</a> 。</p>
 
-<p>逻辑是先判断 <code>pocType</code>，为 2 直接返回不需要排序
-再判断是否有 <code>vuiParameters</code>，取 <code>max_num_reorder_frames</code>
-最后是特定的 profile，不需要排序
+<ol>
+<li>先判断 <code>pocType</code>，为 2 直接返回不需要排序</li>
+<li>再判断是否有 <code>vuiParameters</code>，取 <code>max_num_reorder_frames</code></li>
+<li>然后是特定的 profile，不需要排序</li>
+<li>最后返回 <code>max_dpb_frames</code> 的 默认值16
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -96,13 +105,17 @@
 <span class='line-number'>21</span>
 <span class='line-number'>22</span>
 <span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
 </pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int32_t</span> <span class="nf">ComputeReorderWindow</span><span class="p">(</span><span class="k">const</span> <span class="n">H264SPS</span><span class="o">*</span> <span class="n">sps</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>  <span class="c1">// When |pic_order_cnt_type| == 2, decode order always matches presentation</span>
-</span><span class='line'>  <span class="c1">// order.</span>
-</span><span class='line'>  <span class="c1">// TODO(sandersd): For |pic_order_cnt_type| == 1, analyze the delta cycle to</span>
-</span><span class='line'>  <span class="c1">// find the minimum required reorder window.</span>
-</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">pic_order_cnt_type</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
-</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'><span class="c1">// When |pic_order_cnt_type| == 2, decode order always matches presentation</span>
+</span><span class='line'><span class="c1">// order.</span>
+</span><span class='line'><span class="c1">// TODO(sandersd): For |pic_order_cnt_type| == 1, analyze the delta cycle to</span>
+</span><span class='line'><span class="c1">// find the minimum required reorder window.</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">pic_order_cnt_type</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'><span class="k">return</span> <span class="mi">0</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">li</span><span class="o">&gt;</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">ol</span><span class="o">&gt;</span>
+</span><span class='line'>
 </span><span class='line'>
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="c1">// TODO(sandersd): Compute MaxDpbFrames.</span>
 </span><span class='line'>  <span class="kt">int32_t</span> <span class="n">max_dpb_frames</span> <span class="o">=</span> <span class="mi">16</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
@@ -123,8 +136,16 @@
 
 <h2>vlc</h2>
 
-<p>vlc 的逻辑和 chrome 类似，多了一个根据 level 计算
-代码文件在<a href="https://github.com/videolan/vlc/blob/d7ff28e96eb2cb64c5b1a502443a24229532a449/modules/packetizer/h264_nal.c#L735">h264_nal.c</a>
+<p>vlc 的逻辑和 chrome 类似，多了一个根据 level 计算 <code>max_dpb_frames</code></p>
+
+<ol>
+<li>判断是否有 <code>vuiParameters</code>，取 <code>max_num_reorder_frames</code></li>
+<li>然后是特定的 profile，不需要排序</li>
+<li>最后计算 <code>max_dpb_frames</code></li>
+</ol>
+
+
+<p>代码文件在<a href="https://github.com/videolan/vlc/blob/d7ff28e96eb2cb64c5b1a502443a24229532a449/modules/packetizer/h264_nal.c#L735">h264_nal.c</a>
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
 <span class='line-number'>3</span>
@@ -229,7 +250,243 @@
 </span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="p">}</span>
 </span></code></pre></td></tr></table></div></figure></p>
 
-<p><a href="https://github.com/GStreamer/gst-plugins-bad/blob/bc128d610063a266a1b715e5a696ca252f2d5a74/sys/applemedia/vtdec.c#L962">gst-plugins-bad</a> 也是通过 level 计算。</p>
+<h2>MediaCodec</h2>
+
+<p><code>MediaCodec</code> 和 <code>vlc</code>/<code>Chrome</code>也差不多，计算<code>max_dpb_frames</code>的时候考虑了<code>max_num_ref_frames</code>和<code>max_dec_frame_buffering</code>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="kt">bool</span> <span class="n">H264Decoder</span><span class="o">::</span><span class="n">ProcessSPS</span><span class="p">(</span><span class="kt">int</span> <span class="n">sps_id</span><span class="p">,</span> <span class="kt">bool</span><span class="o">*</span> <span class="n">need_new_buffers</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">DVLOG</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">Processing</span> <span class="n">SPS</span> <span class="nl">id</span><span class="p">:</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">sps_id</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">const</span> <span class="n">H264SPS</span><span class="o">*</span> <span class="n">sps</span> <span class="o">=</span> <span class="n">parser_</span><span class="p">.</span><span class="n">GetSPS</span><span class="p">(</span><span class="n">sps_id</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">sps</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="o">*</span><span class="n">need_new_buffers</span> <span class="o">=</span> <span class="nb">false</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">if</span> <span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">frame_mbs_only_flag</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">DVLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">frame_mbs_only_flag</span> <span class="o">!=</span> <span class="mi">1</span> <span class="n">not</span> <span class="n">supported</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="n">Size</span> <span class="n">new_pic_size</span> <span class="o">=</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">GetCodedSize</span><span class="p">().</span><span class="n">value_or</span><span class="p">(</span><span class="n">Size</span><span class="p">());</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">new_pic_size</span><span class="p">.</span><span class="n">IsEmpty</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">DVLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">Invalid</span> <span class="n">picture</span> <span class="n">size</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="kt">int</span> <span class="n">width_mb</span> <span class="o">=</span> <span class="n">new_pic_size</span><span class="p">.</span><span class="n">width</span><span class="p">()</span> <span class="o">/</span> <span class="mi">16</span><span class="p">;</span>
+</span><span class='line'>  <span class="kt">int</span> <span class="n">height_mb</span> <span class="o">=</span> <span class="n">new_pic_size</span><span class="p">.</span><span class="n">height</span><span class="p">()</span> <span class="o">/</span> <span class="mi">16</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="c1">// Verify that the values are not too large before multiplying.</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">numeric_limits</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;::</span><span class="n">max</span><span class="p">()</span> <span class="o">/</span> <span class="n">width_mb</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">height_mb</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">DVLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">Picture</span> <span class="n">size</span> <span class="n">is</span> <span class="n">too</span> <span class="nl">big</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">new_pic_size</span><span class="p">.</span><span class="n">ToString</span><span class="p">();</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="kt">int</span> <span class="n">level</span> <span class="o">=</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">level_idc</span><span class="p">;</span>
+</span><span class='line'>  <span class="kt">int</span> <span class="n">max_dpb_mbs</span> <span class="o">=</span> <span class="n">LevelToMaxDpbMbs</span><span class="p">(</span><span class="n">level</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">max_dpb_mbs</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="c1">// MaxDpbFrames from level limits per spec.</span>
+</span><span class='line'>  <span class="kt">size_t</span> <span class="n">max_dpb_frames</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">max_dpb_mbs</span> <span class="o">/</span> <span class="p">(</span><span class="n">width_mb</span> <span class="o">*</span> <span class="n">height_mb</span><span class="p">),</span>
+</span><span class='line'>                                   <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">H264DPB</span><span class="o">::</span><span class="n">kDPBMaxSize</span><span class="p">));</span>
+</span><span class='line'>  <span class="n">DVLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="nl">MaxDpbFrames</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">max_dpb_frames</span>
+</span><span class='line'>           <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;,</span> <span class="nl">max_num_ref_frames</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">max_num_ref_frames</span>
+</span><span class='line'>           <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;,</span> <span class="nl">max_dec_frame_buffering</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">max_dec_frame_buffering</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="c1">// Set DPB size to at least the level limit, or what the stream requires.</span>
+</span><span class='line'>  <span class="kt">size_t</span> <span class="n">max_dpb_size</span> <span class="o">=</span>
+</span><span class='line'>      <span class="n">std</span><span class="o">::</span><span class="n">max</span><span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">max_dpb_frames</span><span class="p">),</span>
+</span><span class='line'>               <span class="n">std</span><span class="o">::</span><span class="n">max</span><span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">max_num_ref_frames</span><span class="p">,</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">max_dec_frame_buffering</span><span class="p">));</span>
+</span><span class='line'>  <span class="c1">// Some non-conforming streams specify more frames are needed than the current</span>
+</span><span class='line'>  <span class="c1">// level limit. Allow this, but only up to the maximum number of reference</span>
+</span><span class='line'>  <span class="c1">// frames allowed per spec.</span>
+</span><span class='line'>  <span class="n">DVLOG_IF</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">max_dpb_size</span> <span class="o">&gt;</span> <span class="n">max_dpb_frames</span><span class="p">)</span>
+</span><span class='line'>      <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">Invalid</span> <span class="n">stream</span><span class="p">,</span> <span class="n">DPB</span> <span class="n">size</span> <span class="o">&gt;</span> <span class="n">MaxDpbFrames</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;;</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">max_dpb_size</span> <span class="o">==</span> <span class="mi">0</span> <span class="o">||</span> <span class="n">max_dpb_size</span> <span class="o">&gt;</span> <span class="n">H264DPB</span><span class="o">::</span><span class="n">kDPBMaxSize</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">DVLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">Invalid</span> <span class="n">DPB</span> <span class="nl">size</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">max_dpb_size</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">if</span> <span class="p">((</span><span class="n">pic_size</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">!=</span> <span class="n">new_pic_size</span><span class="p">)</span> <span class="o">||</span> <span class="p">(</span><span class="n">dpb</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">.</span><span class="n">max_num_pics</span><span class="p">()</span> <span class="o">!=</span> <span class="n">max_dpb_size</span><span class="p">))</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">Flush</span><span class="p">())</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">DVLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">Codec</span> <span class="nl">level</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">level</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;,</span> <span class="n">DPB</span> <span class="nl">size</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">max_dpb_size</span>
+</span><span class='line'>             <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;,</span> <span class="n">Picture</span> <span class="nl">size</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">new_pic_size</span><span class="p">.</span><span class="n">ToString</span><span class="p">();</span>
+</span><span class='line'>    <span class="o">*</span><span class="n">need_new_buffers</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">pic_size</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">=</span> <span class="n">new_pic_size</span><span class="p">;</span>
+</span><span class='line'>    <span class="n">dpb</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span><span class="p">.</span><span class="n">set_max_num_pics</span><span class="p">(</span><span class="n">max_dpb_size</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="n">Rect</span> <span class="n">new_visible_rect</span> <span class="o">=</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">GetVisibleRect</span><span class="p">().</span><span class="n">value_or</span><span class="p">(</span><span class="n">Rect</span><span class="p">());</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">visible_rect</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">!=</span> <span class="n">new_visible_rect</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">DVLOG</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">New</span> <span class="n">visible</span> <span class="nl">rect</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">new_visible_rect</span><span class="p">.</span><span class="n">ToString</span><span class="p">();</span>
+</span><span class='line'>    <span class="n">visible_rect</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">=</span> <span class="n">new_visible_rect</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">UpdateMaxNumReorderFrames</span><span class="p">(</span><span class="n">sps</span><span class="p">))</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span><span class='line'>  <span class="n">DVLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="nl">max_num_reorder_frames</span><span class="p">:</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">max_num_reorder_frames_</span><span class="p">;</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="kt">bool</span> <span class="n">H264Decoder</span><span class="o">::</span><span class="n">UpdateMaxNumReorderFrames</span><span class="p">(</span><span class="k">const</span> <span class="n">H264SPS</span><span class="o">*</span> <span class="n">sps</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">vui_parameters_present_flag</span> <span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span><span class="o">&amp;</span><span class="n">amp</span><span class="p">;</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">bitstream_restriction_flag</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">max_num_reorder_frames</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">=</span>
+</span><span class='line'>        <span class="n">base</span><span class="o">::</span><span class="n">checked_cast</span><span class="o">&lt;</span><span class="kt">size_t</span><span class="o">&gt;</span><span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">max_num_reorder_frames</span><span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">max_num_reorder_frames</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">dpb</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="p">.</span><span class="n">max_num_pics</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>      <span class="n">DVLOG</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+</span><span class='line'>          <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span><span class="n">max_num_reorder_frames</span> <span class="n">present</span><span class="p">,</span> <span class="n">but</span> <span class="n">larger</span> <span class="n">than</span> <span class="n">MaxDpbFrames</span> <span class="p">(</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span>
+</span><span class='line'>          <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">max_num_reorder_frames</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;</span> <span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="n">dpb</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="p">.</span><span class="n">max_num_pics</span><span class="p">()</span> <span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span> <span class="o">&amp;</span><span class="n">ldquo</span><span class="p">;)</span><span class="o">&amp;</span><span class="n">rdquo</span><span class="p">;;</span>
+</span><span class='line'>      <span class="n">max_num_reorder_frames</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="c1">// max_num_reorder_frames not present, infer from profile/constraints</span>
+</span><span class='line'>  <span class="c1">// (see VUI semantics in spec).</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">constraint_set3_flag</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">switch</span> <span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">profile_idc</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">case</span> <span class="mi">44</span><span class="o">:</span>
+</span><span class='line'>      <span class="k">case</span> <span class="mi">86</span><span class="o">:</span>
+</span><span class='line'>      <span class="k">case</span> <span class="mi">100</span><span class="o">:</span>
+</span><span class='line'>      <span class="k">case</span> <span class="mi">110</span><span class="o">:</span>
+</span><span class='line'>      <span class="k">case</span> <span class="mi">122</span><span class="o">:</span>
+</span><span class='line'>      <span class="k">case</span> <span class="mi">244</span><span class="o">:</span>
+</span><span class='line'>        <span class="n">max_num_reorder_frames</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>      <span class="k">default</span><span class="o">:</span>
+</span><span class='line'>        <span class="n">max_num_reorder_frames</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">=</span> <span class="n">dpb</span><span class="o">&lt;</span><span class="n">em</span><span class="o">&gt;</span><span class="p">.</span><span class="n">max_num_pics</span><span class="p">();</span>
+</span><span class='line'>        <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>    <span class="n">max_num_reorder_frames</span><span class="o">&lt;/</span><span class="n">em</span><span class="o">&gt;</span> <span class="o">=</span> <span class="n">dpb_</span><span class="p">.</span><span class="n">max_num_pics</span><span class="p">();</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span>  <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<h1>sps.level 计算</h1>
+
+<p><code>vlc</code>和<code>MediaCodec</code> 都计算得出<code>dpb.max_num_pics</code>，拿这个值保底<br/>
+<a href="https://github.com/GStreamer/gst-plugins-bad/blob/bc128d610063a266a1b715e5a696ca252f2d5a74/sys/applemedia/vtdec.c#L962">gst-plugins-bad</a> 只通过 level 计算，计算部分和 <code>MediaCodec</code>一样。</p>
 
 <h1>设置为4</h1>
 
@@ -239,11 +496,20 @@
 
 <p>vlc 中还有 <code>HEVC(H265)</code> 视频获取 <code>max_num_reorder</code> 的方式，代码文件在<a href="https://github.com/videolan/vlc/blob/b525b27e85f1f2cec0fe9b38e08f5dee698a893e/modules/packetizer/hevc_nal.c#L1111">hevc_nal.c</a></p>
 
+<h1>总结</h1>
+
+<ul>
+<li><code>Chrome</code>，<code>vlc</code>，<code>MediaCodec</code>的策略几乎一致，<code>MediaCodec</code>逻辑最完整。</li>
+<li><code>vlc</code>还处理了<code>hevc</code>的<code>max_num_reorder</code></li>
+</ul>
+
+
 <h1>Link</h1>
 
 <p><a href="https://github.com/bilibili/ijkplayer/blob/cced91e3ae3730f5c63f3605b00d25eafcf5b97b/ios/IJKMediaPlayer/IJKMediaPlayer/ijkmedia/ijkplayer/ios/pipeline/h264_sps_parser.h#L267">ijkplayer</a><br/>
 <a href="https://cs.chromium.org/">Chrome</a><br/>
 <a href="https://github.com/videolan/vlc">vlc</a><br/>
+<a href="https://cs.android.com/">Android</a><br/>
 <a href="https://juejin.im/post/5d1385c751882532531bca11">iOS解码关于视频中带B帧排序问题</a></p>
 ]]></content>
   </entry>
