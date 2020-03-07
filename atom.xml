@@ -4,7 +4,7 @@
   <title><![CDATA[lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2020-03-07T11:14:15+08:00</updated>
+  <updated>2020-03-07T11:19:58+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -12,6 +12,244 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[如何获取VideoToolbox的reorder Size]]></title>
+    <link href="http://lvpengwei.github.io//blog/2020/03/07/ru-he-huo-qu-videotoolboxde-reorder-size/"/>
+    <updated>2020-03-07T11:17:28+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2020/03/07/ru-he-huo-qu-videotoolboxde-reorder-size</id>
+    <content type="html"><![CDATA[<h1>Decoder 的区别</h1>
+
+<p>FFmpeg 和 MediaCodec 解码的时候，送数据的顺序是 dts，出数据的顺序是 pts，而 VideoToolbox 是送一个出一个，没有按照 pts 来出数据，需要我们自己排序。</p>
+
+<p>去网上查资料的时候，发现有很多不同的方式</p>
+
+<ol>
+<li>sps.max_num_ref_frames</li>
+<li>sps.vui.max_num_reorder_frames</li>
+<li>通过 sps.level 计算</li>
+<li>直接设置为4</li>
+</ol>
+
+
+<p>通过测试几个文件的 sps 发现 <code>max_num_ref_frames</code> 不是很准</p>
+
+<ol>
+<li><code>max_num_ref_frames=0; max_num_reorder_frames=2</code></li>
+<li><code>max_num_ref_frames=9; max_num_reorder_frames=2</code></li>
+</ol>
+
+
+<h1>sps.max_num_ref_frames</h1>
+
+<p>取 <code>max_num_ref_frames</code> 的有两个播放器，ijkplayer 和 ThumbPlayer</p>
+
+<h2>ijkplayer</h2>
+
+<p>ijkplayer 的逻辑是先取 <code>sps.max_num_ref_frames</code>，然后再取最小值2，最大值5。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class='objc'><span class='line'><span class="n">fmt_desc</span><span class="o">-&gt;</span><span class="n">max_ref_frames</span> <span class="o">=</span> <span class="n">FFMAX</span><span class="p">(</span><span class="n">fmt_desc</span><span class="o">-&gt;</span><span class="n">max_ref_frames</span><span class="p">,</span> <span class="mi">2</span><span class="p">);</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">fmt_desc</span><span class="o">-&gt;</span><span class="n">max_ref_frames</span> <span class="o">=</span> <span class="n">FFMIN</span><span class="p">(</span><span class="n">fmt_desc</span><span class="o">-&gt;</span><span class="n">max_ref_frames</span><span class="p">,</span> <span class="mi">5</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>主要代码在下面两个文件。<br/>
+<a href="https://github.com/bilibili/ijkplayer/blob/master/ios/IJKMediaPlayer/IJKMediaPlayer/ijkmedia/ijkplayer/ios/pipeline/IJKVideoToolBoxAsync.m#L1136">IJKVideoToolBoxAsync.m</a><br/>
+<a href="https://github.com/bilibili/ijkplayer/blob/cced91e3ae3730f5c63f3605b00d25eafcf5b97b/ios/IJKMediaPlayer/IJKMediaPlayer/ijkmedia/ijkplayer/ios/pipeline/h264_sps_parser.h#L267">h264_sps_parser.h</a></p>
+
+<h2>ThumbPlayer</h2>
+
+<p>ThumbPlayer 的逻辑是取 <code>sps.max_num_ref_frames</code>，如果没有设置为  10。</p>
+
+<h1>sps.vui.max_num_reorder_frames</h1>
+
+<p>取 <code>max_num_reorder_frames</code> 的也有两个，<a href="https://cs.chromium.org/">Chrome</a> 和 <a href="https://github.com/videolan/vlc">vlc</a>。</p>
+
+<h2>Chrome</h2>
+
+<p>Chrome 的主要代码如下，代码文件在<a href="https://cs.chromium.org/chromium/src/media/gpu/mac/vt_video_decode_accelerator_mac.cc?dr=CSs&amp;q=vt_video_decode_accelerator_mac&amp;g=0&amp;l=262">vt_video_decode_accelerator_mac.cc</a> 。</p>
+
+<p>逻辑是先判断 <code>pocType</code>，为 2 直接返回不需要排序
+再判断是否有 <code>vuiParameters</code>，取 <code>max_num_reorder_frames</code>
+最后是特定的 profile，不需要排序</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="kt">int32_t</span> <span class="nf">ComputeReorderWindow</span><span class="p">(</span><span class="k">const</span> <span class="n">H264SPS</span><span class="o">*</span> <span class="n">sps</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// When |pic_order_cnt_type| == 2, decode order always matches presentation</span>
+</span><span class='line'>  <span class="c1">// order.</span>
+</span><span class='line'>  <span class="c1">// TODO(sandersd): For |pic_order_cnt_type| == 1, analyze the delta cycle to</span>
+</span><span class='line'>  <span class="c1">// find the minimum required reorder window.</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">pic_order_cnt_type</span> <span class="o">==</span> <span class="mi">2</span><span class="p">)</span>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// TODO(sandersd): Compute MaxDpbFrames.</span>
+</span><span class='line'>  <span class="kt">int32_t</span> <span class="n">max_dpb_frames</span> <span class="o">=</span> <span class="mi">16</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>  <span class="c1">// See AVC spec section E.2.1 definition of |max_num_reorder_frames|.</span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">vui_parameters_present_flag</span> <span class="o">&amp;&amp;</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">bitstream_restriction_flag</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">max_num_reorder_frames</span><span class="p">,</span> <span class="n">max_dpb_frames</span><span class="p">);</span>
+</span><span class='line'>  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">constraint_set3_flag</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">sps</span><span class="o">-&gt;</span><span class="n">profile_idc</span> <span class="o">==</span> <span class="mi">44</span> <span class="o">||</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">profile_idc</span> <span class="o">==</span> <span class="mi">86</span> <span class="o">||</span>
+</span><span class='line'>        <span class="n">sps</span><span class="o">-&gt;</span><span class="n">profile_idc</span> <span class="o">==</span> <span class="mi">100</span> <span class="o">||</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">profile_idc</span> <span class="o">==</span> <span class="mi">110</span> <span class="o">||</span>
+</span><span class='line'>        <span class="n">sps</span><span class="o">-&gt;</span><span class="n">profile_idc</span> <span class="o">==</span> <span class="mi">122</span> <span class="o">||</span> <span class="n">sps</span><span class="o">-&gt;</span><span class="n">profile_idc</span> <span class="o">==</span> <span class="mi">244</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>      <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="k">return</span> <span class="n">max_dpb_frames</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>vlc</h2>
+
+<p>vlc 的逻辑和 chrome 类似，多了一个根据 level 计算
+代码文件在<a href="https://github.com/videolan/vlc/blob/d7ff28e96eb2cb64c5b1a502443a24229532a449/modules/packetizer/h264_nal.c#L735">h264_nal.c</a></p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+</pre></td><td class='code'><pre><code class='c'><span class='line'><span class="k">static</span> <span class="kt">uint8_t</span> <span class="nf">h264_get_max_dpb_frames</span><span class="p">(</span> <span class="k">const</span> <span class="kt">h264_sequence_parameter_set_t</span> <span class="o">*</span><span class="n">p_sps</span> <span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="k">const</span> <span class="kt">h264_level_limits_t</span> <span class="o">*</span><span class="n">limits</span> <span class="o">=</span> <span class="n">h264_get_level_limits</span><span class="p">(</span> <span class="n">p_sps</span> <span class="p">);</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span> <span class="n">limits</span> <span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="kt">unsigned</span> <span class="n">i_frame_height_in_mbs</span> <span class="o">=</span> <span class="p">(</span> <span class="n">p_sps</span><span class="o">-&gt;</span><span class="n">pic_height_in_map_units_minus1</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span> <span class="o">*</span>
+</span><span class='line'>                                         <span class="p">(</span> <span class="mi">2</span> <span class="o">-</span> <span class="n">p_sps</span><span class="o">-&gt;</span><span class="n">frame_mbs_only_flag</span> <span class="p">);</span>
+</span><span class='line'>        <span class="kt">unsigned</span> <span class="n">i_den</span> <span class="o">=</span> <span class="p">(</span> <span class="n">p_sps</span><span class="o">-&gt;</span><span class="n">pic_width_in_mbs_minus1</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">)</span> <span class="o">*</span> <span class="n">i_frame_height_in_mbs</span><span class="p">;</span>
+</span><span class='line'>        <span class="kt">uint8_t</span> <span class="n">i_max_dpb_frames</span> <span class="o">=</span> <span class="n">limits</span><span class="o">-&gt;</span><span class="n">i_max_dpb_mbs</span> <span class="o">/</span> <span class="n">i_den</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">if</span><span class="p">(</span> <span class="n">i_max_dpb_frames</span> <span class="o">&lt;</span> <span class="mi">16</span> <span class="p">)</span>
+</span><span class='line'>            <span class="k">return</span> <span class="n">i_max_dpb_frames</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">return</span> <span class="mi">16</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="kt">bool</span> <span class="nf">h264_get_dpb_values</span><span class="p">(</span> <span class="k">const</span> <span class="kt">h264_sequence_parameter_set_t</span> <span class="o">*</span><span class="n">p_sps</span><span class="p">,</span>
+</span><span class='line'>                          <span class="kt">uint8_t</span> <span class="o">*</span><span class="n">pi_depth</span><span class="p">,</span> <span class="kt">unsigned</span> <span class="o">*</span><span class="n">pi_delay</span> <span class="p">)</span>
+</span><span class='line'><span class="p">{</span>
+</span><span class='line'>    <span class="kt">uint8_t</span> <span class="n">i_max_num_reorder_frames</span> <span class="o">=</span> <span class="n">p_sps</span><span class="o">-&gt;</span><span class="n">vui</span><span class="p">.</span><span class="n">i_max_num_reorder_frames</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">if</span><span class="p">(</span> <span class="o">!</span><span class="n">p_sps</span><span class="o">-&gt;</span><span class="n">vui</span><span class="p">.</span><span class="n">b_bitstream_restriction_flag</span> <span class="p">)</span>
+</span><span class='line'>    <span class="p">{</span>
+</span><span class='line'>        <span class="k">switch</span><span class="p">(</span> <span class="n">p_sps</span><span class="o">-&gt;</span><span class="n">i_profile</span> <span class="p">)</span> <span class="cm">/* E-2.1 */</span>
+</span><span class='line'>        <span class="p">{</span>
+</span><span class='line'>            <span class="k">case</span> <span class="nl">PROFILE_H264_BASELINE</span><span class="p">:</span>
+</span><span class='line'>                <span class="n">i_max_num_reorder_frames</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="cm">/* only I &amp; P */</span>
+</span><span class='line'>                <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>            <span class="k">case</span> <span class="nl">PROFILE_H264_CAVLC_INTRA</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">case</span> <span class="nl">PROFILE_H264_SVC_HIGH</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">case</span> <span class="nl">PROFILE_H264_HIGH</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">case</span> <span class="nl">PROFILE_H264_HIGH_10</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">case</span> <span class="nl">PROFILE_H264_HIGH_422</span><span class="p">:</span>
+</span><span class='line'>            <span class="k">case</span> <span class="nl">PROFILE_H264_HIGH_444_PREDICTIVE</span><span class="p">:</span>
+</span><span class='line'>                <span class="k">if</span><span class="p">(</span> <span class="n">p_sps</span><span class="o">-&gt;</span><span class="n">i_constraint_set_flags</span> <span class="o">&amp;</span> <span class="n">H264_CONSTRAINT_SET_FLAG</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="p">)</span>
+</span><span class='line'>                <span class="p">{</span>
+</span><span class='line'>                    <span class="n">i_max_num_reorder_frames</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="cm">/* all IDR */</span>
+</span><span class='line'>                    <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>                <span class="p">}</span>
+</span><span class='line'>                <span class="cm">/* fallthrough */</span>
+</span><span class='line'>            <span class="k">default</span><span class="o">:</span>
+</span><span class='line'>                <span class="n">i_max_num_reorder_frames</span> <span class="o">=</span> <span class="n">h264_get_max_dpb_frames</span><span class="p">(</span> <span class="n">p_sps</span> <span class="p">);</span>
+</span><span class='line'>                <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="o">*</span><span class="n">pi_depth</span> <span class="o">=</span> <span class="n">i_max_num_reorder_frames</span><span class="p">;</span>
+</span><span class='line'>    <span class="o">*</span><span class="n">pi_delay</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'>    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><a href="https://github.com/GStreamer/gst-plugins-bad/blob/bc128d610063a266a1b715e5a696ca252f2d5a74/sys/applemedia/vtdec.c#L962">gst-plugins-bad</a> 也是通过 level 计算。</p>
+
+<h1>设置为4</h1>
+
+<p><a href="https://juejin.im/post/5d1385c751882532531bca11">iOS解码关于视频中带B帧排序问题</a></p>
+
+<h1>HEVC</h1>
+
+<p>vlc 中还有 <code>HEVC(H265)</code> 视频获取 <code>max_num_reorder</code> 的方式，代码文件在<a href="https://github.com/videolan/vlc/blob/b525b27e85f1f2cec0fe9b38e08f5dee698a893e/modules/packetizer/hevc_nal.c#L1111">hevc_nal.c</a></p>
+
+<h1>Link</h1>
+
+<p><a href="https://github.com/bilibili/ijkplayer/blob/cced91e3ae3730f5c63f3605b00d25eafcf5b97b/ios/IJKMediaPlayer/IJKMediaPlayer/ijkmedia/ijkplayer/ios/pipeline/h264_sps_parser.h#L267">ijkplayer</a><br/>
+<a href="https://cs.chromium.org/">Chrome</a><br/>
+<a href="https://github.com/videolan/vlc">vlc</a><br/>
+<a href="https://juejin.im/post/5d1385c751882532531bca11">iOS解码关于视频中带B帧排序问题</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[iOS NV12转SkImage颜色不正常的问题]]></title>
