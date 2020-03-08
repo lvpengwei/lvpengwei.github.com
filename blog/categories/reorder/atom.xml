@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Reorder | lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//blog/categories/reorder/atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2020-03-07T14:35:18+08:00</updated>
+  <updated>2020-03-08T14:49:55+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -496,6 +496,11 @@
 
 <p>vlc 中还有 <code>HEVC(H265)</code> 视频获取 <code>max_num_reorder</code> 的方式，代码文件在<a href="https://github.com/videolan/vlc/blob/b525b27e85f1f2cec0fe9b38e08f5dee698a893e/modules/packetizer/hevc_nal.c#L1111">hevc_nal.c</a></p>
 
+<h1>FFmpeg</h1>
+
+<p><a href="https://github.com/FFmpeg/FFmpeg/blob/177c68e3496e0d807641110f2a76d25ad71e45bb/libavcodec/h264_slice.c#L1336">h264</a><br/>
+<a href="https://github.com/FFmpeg/FFmpeg/blob/177c68e3496e0d807641110f2a76d25ad71e45bb/libavcodec/hevc_refs.c#L174">h265</a></p>
+
 <h1>总结</h1>
 
 <ul>
@@ -510,6 +515,7 @@
 <a href="https://cs.chromium.org/">Chrome</a><br/>
 <a href="https://github.com/videolan/vlc">vlc</a><br/>
 <a href="https://cs.android.com/">Android</a><br/>
+<a href="https://github.com/FFmpeg/FFmpeg">FFmpeg</a><br/>
 <a href="https://juejin.im/post/5d1385c751882532531bca11">iOS解码关于视频中带B帧排序问题</a></p>
 ]]></content>
   </entry>
