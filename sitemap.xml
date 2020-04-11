@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://lvpengwei.github.io//blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/</loc>
+<lastmod>2020-04-11T16:00:20+08:00</lastmod>
+</url>
+<url>
 <loc>http://lvpengwei.github.io//blog/2020/03/07/ru-he-huo-qu-videotoolboxde-reorder-size/</loc>
 <lastmod>2020-03-07T11:17:28+08:00</lastmod>
 </url>
@@ -97,5 +101,20 @@
 </url>
 <url>
 <loc>http://lvpengwei.github.io//blog/categories/ffmpeg/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/seek/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/jing-zhun/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/audio/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/mp3/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//posts/2/</loc>
 </url>
 </urlset>
