@@ -1,0 +1,347 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>Mp3精准seek与比特池技术 - lvpengwei’s Blog</title>
+  <meta name="author" content="lvpengwei">
+
+  
+  <meta name="description" content="ffmpeg 的 seek flag AVSEEK_FLAG_ANY 并不精准。 起因 最近在做音频剪辑的功能，有下面的场景 一段音频，一个时间区间将它分成三段，前段和后段速度保持不变，中间一段变速2倍。 实现上，我分成了三个不同的 segment 来处理，segment.start 不等于 0 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://lvpengwei.github.io//blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="lvpengwei’s Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?3bf46f02d4ea4f6cf35efc921deb67fb";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">lvpengwei’s Blog</a></h1>
+  
+    <h2>学习历程，生活点滴。</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="lvpengwei.github.io/">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">Mp3精准seek与比特池技术</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2020-04-11T16:00:20+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2020</span></span> <span class='time'>4:00 pm</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><blockquote><p>ffmpeg 的 seek flag AVSEEK_FLAG_ANY 并不精准。</p></blockquote>
+
+<h3>起因</h3>
+
+<p>最近在做音频剪辑的功能，有下面的场景</p>
+
+<p>一段音频，一个时间区间将它分成三段，前段和后段速度保持不变，中间一段变速2倍。</p>
+
+<p>实现上，我分成了三个不同的 segment 来处理，segment.start 不等于 0 的，会执行一下 seek，使用的是 ffmpeg 的 <code>AVSEEK_FLAG_ANY | AVSEEK_FLAG_BACKWARD</code>，来精准 seek，完成之后发现段与段交接的地方声音并不连贯。</p>
+
+<h4>裁剪 frame</h4>
+
+<p>我已经做了一个处理，在段结尾的时候，裁掉多余的bytes，在段开始的时候也裁掉，保证段与段之间解码后的数据连续。但是声音还是不连续。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SampleData</span><span class="o">&gt;</span> <span class="n">AudioSegmentReader</span><span class="o">::</span><span class="n">copyNextSample</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">currentLength</span> <span class="o">&gt;=</span> <span class="n">endLength</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">data</span> <span class="o">=</span> <span class="n">copyNextSampleInternal</span><span class="p">();</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">data</span> <span class="o">==</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="c1">// 裁掉结尾多余的 bytes</span>
+</span><span class='line'>    <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">,</span> <span class="n">endLength</span> <span class="o">-</span>   <span class="n">currentLength</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">currentLength</span> <span class="o">+=</span> <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">data</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 解码出的数据判断是否需要裁掉开头的 bytes</span>
+</span><span class='line'><span class="n">data</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">-&gt;</span><span class="n">onRenderFrame</span><span class="p">();</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">time</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">-&gt;</span><span class="n">currentPresentationTime</span><span class="p">();</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">time</span> <span class="o">&amp;&amp;</span> <span class="n">time</span> <span class="o">&lt;</span> <span class="n">startTime</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">startLength</span> <span class="o">-</span> <span class="n">SampleTimeToLength</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">outputSetting</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">delta</span> <span class="o">&lt;</span> <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">+=</span> <span class="n">delta</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span> <span class="o">-=</span> <span class="n">delta</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>排查 packet 和 frame</h4>
+
+<p>打印了一下段与段连接地方的 packet 的 packetData 和 frameData，发现 packetData 正常，seek 之后的 frameData 中前面大部分是 0，和上一段结尾解出的 frameData 不一样。记得音频帧可以独立解码，不需要参考前面的帧数据，那问题出现在哪里？</p>
+
+<blockquote><p>一个测试：解封装连续，解码之前 flush 一下 decoder，会发现 frameData 基本都是有问题的。</p></blockquote>
+
+<h4>了解 mp3 帧头格式</h4>
+
+<p>很多规则，但是没卵用。</p>
+
+<h4>比特池技术</h4>
+
+<p>最后去查 mp3 的解码过程实现，发现 mp3 使用了比特池技术，当前帧的主数据可能放在上一帧。。。。也就是要实现精准 seek，得往前多 seek 几帧，然后把前面的 frame 丢掉。
+试了一下，结果如预期。</p>
+
+<h3>参考</h3>
+
+<p><a href="https://blog.csdn.net/jgdu1981/article/details/6757498">mp3比特池技术</a><br/>
+<a href="http://journal2.cqupt.edu.cn/jcuptnse/html/2013/1673-825X-25-4-494.html">功耗高集成度MP3解码器IP核设计</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">lvpengwei</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2020-04-11T16:00:20+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2020</span></span> <span class='time'>4:00 pm</span></time>
+      
+
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/audio/'>audio</a>, <a class='category' href='/blog/categories/ffmpeg/'>ffmpeg</a>, <a class='category' href='/blog/categories/mp3/'>mp3</a>, <a class='category' href='/blog/categories/seek/'>seek</a>, <a class='category' href='/blog/categories/jing-zhun/'>精准</a>
+  
+</span>
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2020/03/07/ru-he-huo-qu-videotoolboxde-reorder-size/" title="Previous Post: 如何获取VideoToolbox的reorder size">&laquo; 如何获取VideoToolbox的reorder size</a>
+      
+      
+        <a class="basic-alignment right" href="/blog/2021/08/05/wen-li-ju-bu-cai-yang/" title="Next Post: 纹理局部采样">纹理局部采样 &raquo;</a>
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2021/08/05/wen-li-ju-bu-cai-yang/">纹理局部采样</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/">Mp3精准seek与比特池技术</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2020/03/07/ru-he-huo-qu-videotoolboxde-reorder-size/">如何获取VideoToolbox的reorder Size</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2020/03/07/ios-nv12zhuan-skimageyan-se-bu-zheng-chang-de-wen-ti/">iOS NV12转SkImage颜色不正常的问题</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2019/07/08/app-duo-qu-yu-pi-fu-(zhu-ti-)de-shi-xian/">App 多区域皮肤（主题）的实现</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/lvpengwei">@lvpengwei</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'lvpengwei',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2021 - lvpengwei -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'lvpengwei';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://lvpengwei.github.io//blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/';
+        var disqus_url = 'http://lvpengwei.github.io//blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>

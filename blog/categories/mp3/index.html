@@ -5,13 +5,11 @@
 <!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  <title>App 多区域皮肤（主题）的实现 - lvpengwei’s Blog</title>
+  <title>Category: Mp3 - lvpengwei’s Blog</title>
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="需求 App 里可以皮肤化的 UI 区域分为 3 块（App 皮肤/阅读器主题/其他），这 3 块又和黑夜模式有重叠。 App 皮肤区域有首页 4 个 tab bar 页面（还没有实现主题化，在规划中）
-阅读器主题区域主要是阅读器相关的设置和菜单页面
-其他指不需要主题化的区域 第一种方案 &hellip;">
+  <meta name="description" content="Category: mp3">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -20,7 +18,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   
-  <link rel="canonical" href="http://lvpengwei.github.io//blog/2019/07/08/app-duo-qu-yu-pi-fu-(zhu-ti-)de-shi-xian/">
+  <link rel="canonical" href="http://lvpengwei.github.io//blog/categories/mp3/">
   <link href="/favicon.png" rel="icon">
   <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
   <link href="/atom.xml" rel="alternate" title="lvpengwei’s Blog" type="application/atom+xml">
@@ -77,111 +75,36 @@
   <div id="main">
     <div id="content">
       <div>
-<article class="hentry" role="article">
+<article role="article">
   
   <header>
-    
-      <h1 class="entry-title">App 多区域皮肤（主题）的实现</h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2019-07-08T21:58:47+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:58 pm</span></time>
-        
-           | <a href="#disqus_thread"
-             data-disqus-identifier="http://lvpengwei.github.io/">Comments</a>
-        
-      </p>
+    <h1 class="entry-title">Category: Mp3</h1>
     
   </header>
-
-
-<div class="entry-content"><h2>需求</h2>
-
-<p>App 里可以皮肤化的 UI 区域分为 3 块（App 皮肤/阅读器主题/其他），这 3 块又和黑夜模式有重叠。</p>
-
-<ul>
-<li>App 皮肤区域有首页 4 个 tab bar 页面（还没有实现主题化，在规划中）</li>
-<li>阅读器主题区域主要是阅读器相关的设置和菜单页面</li>
-<li>其他指不需要主题化的区域</li>
-</ul>
-
-
-<p><img src="https://i.loli.net/2019/03/31/5ca0a5f084143.png" alt="" /></p>
-
-<h2>第一种方案</h2>
-
-<p>主要思路就是给 UIKit 的 Category 增加一些属性，配置每一类主题的 key，在第一次赋值或者收到主题改变的通知时进行 apply。</p>
-
-<p><img src="https://i.loli.net/2019/03/31/5ca0a5f08618e.png" alt="" />
-<img src="https://i.loli.net/2019/03/28/5c9c9e7aec27f.png" alt="" /></p>
-
-<blockquote><p>qd 是黑夜模式前缀，readerTheme 是阅读器主题前缀</p></blockquote>
-
-<p>这种方案的问题是
-- 如果要增加一类主题（比如 App 皮肤类），需要把所有之前增加的属性都 copy 一下（包括 apply 部分的代码），工作量很大。
-- 如果要增加一个新的属性，需要添加多遍（前缀分别是qd/readerTheme/app）。</p>
-
-<h2>重构之后的方案</h2>
-
-<blockquote><p>借助 OC 的泛型和  KVC 的一次重构</p></blockquote>
-
-<p><img src="https://i.loli.net/2019/03/31/5ca0a5f095a1a.png" alt="" />
-<img src="https://i.loli.net/2019/04/17/5cb6d05c376eb.jpg" alt="" /></p>
-
-<h2>重构前后对比</h2>
-
-<p><img src="https://ws3.sinaimg.cn/large/005BYqpggy1g1mx1031r9j31d30u07u7.jpg" alt="" /></p>
-
-<p>代码实现样例：<a href="https://github.com/lvpengwei/LVThemeKit">LVThemeKit</a></p>
-</div>
-
-
-  <footer>
-    <p class="meta">
-      
   
-
-<span class="byline author vcard">Posted by <span class="fn">lvpengwei</span></span>
-
-      
+  <div id="blog-archives" class="category">
 
 
 
-
-<time class='entry-date' datetime='2019-07-08T21:58:47+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:58 pm</span></time>
-      
-
-
-    </p>
-    
-      <div class="sharing">
   
-  
-  
-</div>
+  <h2>2020</h2>
 
-    
-    <p class="meta">
-      
-        <a class="basic-alignment left" href="/blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/" title="Previous Post: iOS&amp;Android 播放透明视频">&laquo; iOS&amp;Android 播放透明视频</a>
-      
-      
-        <a class="basic-alignment right" href="/blog/2020/03/07/ios-nv12zhuan-skimageyan-se-bu-zheng-chang-de-wen-ti/" title="Next Post: iOS NV12转SkImage颜色不正常的问题">iOS NV12转SkImage颜色不正常的问题 &raquo;</a>
-      
-    </p>
-  </footer>
+<article>
+  
+<h1><a href="/blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/">Mp3精准seek与比特池技术</a></h1>
+<time datetime="2020-04-11T16:00:20+08:00" pubdate><span class='month'>Apr</span> <span class='day'>11</span> <span class='year'>2020</span></time>
+
+<footer>
+  <span class="categories">posted in <a class='category' href='/blog/categories/audio/'>audio</a>, <a class='category' href='/blog/categories/ffmpeg/'>ffmpeg</a>, <a class='category' href='/blog/categories/mp3/'>mp3</a>, <a class='category' href='/blog/categories/seek/'>seek</a>, <a class='category' href='/blog/categories/jing-zhun/'>精准</a></span>
+</footer>
+
+
 </article>
 
-  <section>
-    <h1>Comments</h1>
-    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
 </div>
-  </section>
+
+  
+</article>
 
 </div>
 
@@ -265,10 +188,7 @@
       var disqus_shortname = 'lvpengwei';
       
         
-        // var disqus_developer = 1;
-        var disqus_identifier = 'http://lvpengwei.github.io//blog/2019/07/08/app-duo-qu-yu-pi-fu-(zhu-ti-)de-shi-xian/';
-        var disqus_url = 'http://lvpengwei.github.io//blog/2019/07/08/app-duo-qu-yu-pi-fu-(zhu-ti-)de-shi-xian/';
-        var disqus_script = 'embed.js';
+        var disqus_script = 'count.js';
       
     (function () {
       var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

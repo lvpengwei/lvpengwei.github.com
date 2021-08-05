@@ -4,7 +4,7 @@
   <title><![CDATA[lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2021-08-05T17:32:20+08:00</updated>
+  <updated>2021-08-05T23:00:25+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -172,6 +172,104 @@
 <a href="https://developer.android.com/reference/android/graphics/SurfaceTexture#getTransformMatrix(float[]">SurfaceTexture.getTransformMatrix</a>)<br/>
 <a href="https://zhuanlan.zhihu.com/p/143377682">图形学底层探秘 - 纹理采样、环绕、过滤与Mipmap的那些事</a><br/>
 <a href="https://docs.microsoft.com/en-us/windows/win32/direct3d9/directly-mapping-texels-to-pixels">Directly Mapping Texels to Pixels (Direct3D 9)</a></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Mp3精准seek与比特池技术]]></title>
+    <link href="http://lvpengwei.github.io//blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/"/>
+    <updated>2020-04-11T16:00:20+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu</id>
+    <content type="html"><![CDATA[<blockquote><p>ffmpeg 的 seek flag AVSEEK_FLAG_ANY 并不精准。</p></blockquote>
+
+<h3>起因</h3>
+
+<p>最近在做音频剪辑的功能，有下面的场景</p>
+
+<p>一段音频，一个时间区间将它分成三段，前段和后段速度保持不变，中间一段变速2倍。</p>
+
+<p>实现上，我分成了三个不同的 segment 来处理，segment.start 不等于 0 的，会执行一下 seek，使用的是 ffmpeg 的 <code>AVSEEK_FLAG_ANY | AVSEEK_FLAG_BACKWARD</code>，来精准 seek，完成之后发现段与段交接的地方声音并不连贯。</p>
+
+<h4>裁剪 frame</h4>
+
+<p>我已经做了一个处理，在段结尾的时候，裁掉多余的bytes，在段开始的时候也裁掉，保证段与段之间解码后的数据连续。但是声音还是不连续。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SampleData</span><span class="o">&gt;</span> <span class="n">AudioSegmentReader</span><span class="o">::</span><span class="n">copyNextSample</span><span class="p">()</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">currentLength</span> <span class="o">&gt;=</span> <span class="n">endLength</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">data</span> <span class="o">=</span> <span class="n">copyNextSampleInternal</span><span class="p">();</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">data</span> <span class="o">==</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>    <span class="c1">// 裁掉结尾多余的 bytes</span>
+</span><span class='line'>    <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">,</span> <span class="n">endLength</span> <span class="o">-</span>   <span class="n">currentLength</span><span class="p">);</span>
+</span><span class='line'>    <span class="n">currentLength</span> <span class="o">+=</span> <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="n">data</span><span class="p">;</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 解码出的数据判断是否需要裁掉开头的 bytes</span>
+</span><span class='line'><span class="n">data</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">-&gt;</span><span class="n">onRenderFrame</span><span class="p">();</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">time</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">-&gt;</span><span class="n">currentPresentationTime</span><span class="p">();</span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">time</span> <span class="o">&amp;&amp;</span> <span class="n">time</span> <span class="o">&lt;</span> <span class="n">startTime</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="k">auto</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">startLength</span> <span class="o">-</span> <span class="n">SampleTimeToLength</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">outputSetting</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">delta</span> <span class="o">&lt;</span> <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">+=</span> <span class="n">delta</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span> <span class="o">-=</span> <span class="n">delta</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
+</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>    <span class="p">}</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>排查 packet 和 frame</h4>
+
+<p>打印了一下段与段连接地方的 packet 的 packetData 和 frameData，发现 packetData 正常，seek 之后的 frameData 中前面大部分是 0，和上一段结尾解出的 frameData 不一样。记得音频帧可以独立解码，不需要参考前面的帧数据，那问题出现在哪里？</p>
+
+<blockquote><p>一个测试：解封装连续，解码之前 flush 一下 decoder，会发现 frameData 基本都是有问题的。</p></blockquote>
+
+<h4>了解 mp3 帧头格式</h4>
+
+<p>很多规则，但是没卵用。</p>
+
+<h4>比特池技术</h4>
+
+<p>最后去查 mp3 的解码过程实现，发现 mp3 使用了比特池技术，当前帧的主数据可能放在上一帧。。。。也就是要实现精准 seek，得往前多 seek 几帧，然后把前面的 frame 丢掉。
+试了一下，结果如预期。</p>
+
+<h3>参考</h3>
+
+<p><a href="https://blog.csdn.net/jgdu1981/article/details/6757498">mp3比特池技术</a><br/>
+<a href="http://journal2.cqupt.edu.cn/jcuptnse/html/2013/1673-825X-25-4-494.html">功耗高集成度MP3解码器IP核设计</a></p>
 ]]></content>
   </entry>
   
