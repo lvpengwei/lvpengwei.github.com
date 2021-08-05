@@ -9,7 +9,7 @@
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="ffmpeg 的 seek flag AVSEEK_FLAG_ANY 并不精准。 起因 最近在做音频剪辑的功能，有下面的场景 一段音频，一个时间区间将它分成三段，前段和后段速度保持不变，中间一段变速2倍。 实现上，我分成了三个不同的 segment 来处理，segment.start 不等于 0 &hellip;">
+  <meta name="description" content="现象 在使用 MediaCodec 解码视频获取到纹理时，它会给出一个 cropRect 来裁剪多余的绿色像素。当拿着这个纹理和对应的 cropRect 去上屏的时候，发现在边缘的地方有一像素绿边。 如图所示，解码出的纹理大小是 1920*1088，有 8 像素的绿边；裁剪后大小是 1920* &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -82,7 +82,7 @@
       
   <header>
     
-      <h1 class="entry-title"><a href="/blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/">Mp3精准seek与比特池技术</a></h1>
+      <h1 class="entry-title"><a href="/blog/2021/08/05/wen-li-ju-bu-cai-yang/">纹理局部采样</a></h1>
     
     
       <p class="meta">
@@ -91,29 +91,43 @@
 
 
 
-<time class='entry-date' datetime='2020-04-11T16:00:20+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>11</span><span class='date-suffix'>th</span>, <span class='date-year'>2020</span></span> <span class='time'>4:00 pm</span></time>
+<time class='entry-date' datetime='2021-08-05T17:21:42+08:00'><span class='date'><span class='date-month'>Aug</span> <span class='date-day'>5</span><span class='date-suffix'>th</span>, <span class='date-year'>2021</span></span> <span class='time'>5:21 pm</span></time>
         
-           | <a href="/blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/#disqus_thread"
-             data-disqus-identifier="http://lvpengwei.github.io//blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/">Comments</a>
+           | <a href="/blog/2021/08/05/wen-li-ju-bu-cai-yang/#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io//blog/2021/08/05/wen-li-ju-bu-cai-yang/">Comments</a>
         
       </p>
     
   </header>
 
 
-  <div class="entry-content"><blockquote><p>ffmpeg 的 seek flag AVSEEK_FLAG_ANY 并不精准。</p></blockquote>
+  <div class="entry-content"><h2>现象</h2>
 
-<h3>起因</h3>
+<p>在使用 MediaCodec 解码视频获取到纹理时，它会给出一个 cropRect 来裁剪多余的绿色像素。当拿着这个纹理和对应的 cropRect 去上屏的时候，发现在边缘的地方有一像素绿边。</p>
 
-<p>最近在做音频剪辑的功能，有下面的场景</p>
+<p>如图所示，解码出的纹理大小是 <code>1920*1088</code>，有 8 像素的绿边；裁剪后大小是 <code>1920*1080</code>，有 1 像素绿边。</p>
 
-<p>一段音频，一个时间区间将它分成三段，前段和后段速度保持不变，中间一段变速2倍。</p>
+<h4>解码图片</h4>
 
-<p>实现上，我分成了三个不同的 segment 来处理，segment.start 不等于 0 的，会执行一下 seek，使用的是 ffmpeg 的 <code>AVSEEK_FLAG_ANY | AVSEEK_FLAG_BACKWARD</code>，来精准 seek，完成之后发现段与段交接的地方声音并不连贯。</p>
+<p><img src="/images/20210805/decoded_image.png" width="480" alt="" /></p>
 
-<h4>裁剪 frame</h4>
+<h4>裁剪后</h4>
 
-<p>我已经做了一个处理，在段结尾的时候，裁掉多余的bytes，在段开始的时候也裁掉，保证段与段之间解码后的数据连续。但是声音还是不连续。</p>
+<p><img src="/images/20210805/crop_image.png" width="480" alt="" /></p>
+
+<h2>纹素和像素的映射关系</h2>
+
+<p>一开始怀疑是纹素和像素的坐标系不一致的问题，对纹理坐标减了 0.5，发现还是有绿边。然后还找到坐标系不一致的问题只存在于 D3D9，后续的 D3D10 修改了坐标系的对应关系，而且 OpenGL 的坐标系一直没这个问题。</p>
+
+<h2>收缩 0.5 纹素</h2>
+
+<p>在<a href="https://stackoverflow.com/questions/6023400/opengl-es-texture-coordinates-slightly-off">OpenGL ES Texture Coordinates Slightly Off</a>上看到说只有当采样的点在纹素中心，才返回准确的颜色，否则就是插值出来的。也就是当采样的点在纹素中心和边界之间时，可能就会采到超出边界的颜色。</p>
+
+<h2>查 Android 源码</h2>
+
+<p>同时也发现使用<code>SurfaceTexture.getTransformMatrix</code>得到的 matrix 时，画面是正常的，所以去查看了 Android 的源码，想知道这个 matrix 是怎么生成的。</p>
+
+<p>生成的逻辑就是下面这段代码，可以看到注释说为了防止双线性采样超过裁剪边缘，普通纹理需要收缩 0.5 纹素，YUV420的要收缩 1.0 纹素。</p>
 
 <figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>
@@ -142,55 +156,105 @@
 <span class='line-number'>25</span>
 <span class='line-number'>26</span>
 <span class='line-number'>27</span>
-</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="n">std</span><span class="o">::</span><span class="n">shared_ptr</span><span class="o">&lt;</span><span class="n">SampleData</span><span class="o">&gt;</span> <span class="n">AudioSegmentReader</span><span class="o">::</span><span class="n">copyNextSample</span><span class="p">()</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">currentLength</span> <span class="o">&gt;=</span> <span class="n">endLength</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="k">auto</span> <span class="n">data</span> <span class="o">=</span> <span class="n">copyNextSampleInternal</span><span class="p">();</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">data</span> <span class="o">==</span> <span class="k">nullptr</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="k">return</span> <span class="k">nullptr</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span>
-</span><span class='line'>    <span class="c1">// 裁掉结尾多余的 bytes</span>
-</span><span class='line'>    <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">min</span><span class="p">(</span><span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">,</span> <span class="n">endLength</span> <span class="o">-</span>   <span class="n">currentLength</span><span class="p">);</span>
-</span><span class='line'>    <span class="n">currentLength</span> <span class="o">+=</span> <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">;</span>
-</span><span class='line'>    <span class="k">return</span> <span class="n">data</span><span class="p">;</span>
-</span><span class='line'><span class="p">}</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="p">......</span>
+</span><span class='line'><span class="p">......</span>
+</span><span class='line'><span class="kt">void</span> <span class="n">SurfaceTexture</span><span class="o">::</span><span class="n">computeTransformMatrix</span><span class="p">(</span><span class="kt">float</span> <span class="n">outTransform</span><span class="p">[</span><span class="mi">16</span><span class="p">],</span> <span class="k">const</span> <span class="n">sp</span><span class="o">&lt;</span><span class="n">GraphicBuffer</span><span class="o">&gt;&amp;</span> <span class="n">buf</span><span class="p">,</span>
+</span><span class='line'>                                            <span class="k">const</span> <span class="n">Rect</span><span class="o">&amp;</span> <span class="n">cropRect</span><span class="p">,</span> <span class="kt">uint32_t</span> <span class="n">transform</span><span class="p">,</span>
+</span><span class='line'>                                            <span class="kt">bool</span> <span class="n">filtering</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="p">......</span>
+</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="n">cropRect</span><span class="p">.</span><span class="n">isEmpty</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">buf</span><span class="p">.</span><span class="n">get</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>        <span class="kt">float</span> <span class="n">tx</span> <span class="o">=</span> <span class="mf">0.0f</span><span class="p">,</span> <span class="n">ty</span> <span class="o">=</span> <span class="mf">0.0f</span><span class="p">,</span> <span class="n">sx</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="p">,</span> <span class="n">sy</span> <span class="o">=</span> <span class="mf">1.0f</span><span class="p">;</span>
+</span><span class='line'>        <span class="kt">float</span> <span class="n">bufferWidth</span> <span class="o">=</span> <span class="n">buf</span><span class="o">-&gt;</span><span class="n">getWidth</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">float</span> <span class="n">bufferHeight</span> <span class="o">=</span> <span class="n">buf</span><span class="o">-&gt;</span><span class="n">getHeight</span><span class="p">();</span>
+</span><span class='line'>        <span class="kt">float</span> <span class="n">shrinkAmount</span> <span class="o">=</span> <span class="mf">0.0f</span><span class="p">;</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">filtering</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="c1">// In order to prevent bilinear sampling beyond the edge of the</span>
+</span><span class='line'>            <span class="c1">// crop rectangle we may need to shrink it by 2 texels in each</span>
+</span><span class='line'>            <span class="c1">// dimension.  Normally this would just need to take 1/2 a texel</span>
+</span><span class='line'>            <span class="c1">// off each end, but because the chroma channels of YUV420 images</span>
+</span><span class='line'>            <span class="c1">// are subsampled we may need to shrink the crop region by a whole</span>
+</span><span class='line'>            <span class="c1">// texel on each side.</span>
+</span><span class='line'>            <span class="k">switch</span> <span class="p">(</span><span class="n">buf</span><span class="o">-&gt;</span><span class="n">getPixelFormat</span><span class="p">())</span> <span class="p">{</span>
+</span><span class='line'>                <span class="k">case</span> <span class="nl">PIXEL_FORMAT_RGBA_8888</span><span class="p">:</span>
+</span><span class='line'>                <span class="k">case</span> <span class="nl">PIXEL_FORMAT_RGBX_8888</span><span class="p">:</span>
+</span><span class='line'>                <span class="k">case</span> <span class="nl">PIXEL_FORMAT_RGBA_FP16</span><span class="p">:</span>
+</span><span class='line'>                <span class="k">case</span> <span class="nl">PIXEL_FORMAT_RGBA_1010102</span><span class="p">:</span>
+</span><span class='line'>                <span class="k">case</span> <span class="nl">PIXEL_FORMAT_RGB_888</span><span class="p">:</span>
+</span><span class='line'>                <span class="k">case</span> <span class="nl">PIXEL_FORMAT_RGB_565</span><span class="p">:</span>
+</span><span class='line'>                <span class="k">case</span> <span class="nl">PIXEL_FORMAT_BGRA_8888</span><span class="p">:</span>
+</span><span class='line'>                    <span class="c1">// We know there&#39;s no subsampling of any channels, so we</span>
+</span><span class='line'>                    <span class="c1">// only need to shrink by a half a pixel.</span>
+</span><span class='line'>                    <span class="n">shrinkAmount</span> <span class="o">=</span> <span class="mf">0.5</span><span class="p">;</span>
+</span><span class='line'>                    <span class="k">break</span><span class="p">;</span>
 </span><span class='line'>
-</span><span class='line'><span class="c1">// 解码出的数据判断是否需要裁掉开头的 bytes</span>
-</span><span class='line'><span class="n">data</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">-&gt;</span><span class="n">onRenderFrame</span><span class="p">();</span>
-</span><span class='line'><span class="k">auto</span> <span class="n">time</span> <span class="o">=</span> <span class="n">decoder</span><span class="o">-&gt;</span><span class="n">currentPresentationTime</span><span class="p">();</span>
-</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="mi">0</span> <span class="o">&lt;=</span> <span class="n">time</span> <span class="o">&amp;&amp;</span> <span class="n">time</span> <span class="o">&lt;</span> <span class="n">startTime</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>    <span class="k">auto</span> <span class="n">delta</span> <span class="o">=</span> <span class="n">startLength</span> <span class="o">-</span> <span class="n">SampleTimeToLength</span><span class="p">(</span><span class="n">time</span><span class="p">,</span> <span class="n">outputSetting</span><span class="p">.</span><span class="n">get</span><span class="p">());</span>
-</span><span class='line'>    <span class="k">if</span> <span class="p">(</span><span class="n">delta</span> <span class="o">&lt;</span> <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span><span class="p">)</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">+=</span> <span class="n">delta</span><span class="p">;</span>
-</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span> <span class="o">-=</span> <span class="n">delta</span><span class="p">;</span>
-</span><span class='line'>    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">data</span> <span class="o">=</span> <span class="k">nullptr</span><span class="p">;</span>
-</span><span class='line'>        <span class="n">data</span><span class="o">-&gt;</span><span class="n">length</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</span><span class='line'>                <span class="k">default</span><span class="o">:</span>
+</span><span class='line'>                    <span class="c1">// If we don&#39;t recognize the format, we must assume the</span>
+</span><span class='line'>                    <span class="c1">// worst case (that we care about), which is YUV420.</span>
+</span><span class='line'>                    <span class="n">shrinkAmount</span> <span class="o">=</span> <span class="mf">1.0</span><span class="p">;</span>
+</span><span class='line'>                    <span class="k">break</span><span class="p">;</span>
+</span><span class='line'>            <span class="p">}</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="c1">// Only shrink the dimensions that are not the size of the buffer.</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">cropRect</span><span class="p">.</span><span class="n">width</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">bufferWidth</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">tx</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">(</span><span class="n">cropRect</span><span class="p">.</span><span class="n">left</span><span class="p">)</span> <span class="o">+</span> <span class="n">shrinkAmount</span><span class="p">)</span> <span class="o">/</span> <span class="n">bufferWidth</span><span class="p">;</span>
+</span><span class='line'>            <span class="n">sx</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">(</span><span class="n">cropRect</span><span class="p">.</span><span class="n">width</span><span class="p">())</span> <span class="o">-</span> <span class="p">(</span><span class="mf">2.0f</span> <span class="o">*</span> <span class="n">shrinkAmount</span><span class="p">))</span> <span class="o">/</span> <span class="n">bufferWidth</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>        <span class="k">if</span> <span class="p">(</span><span class="n">cropRect</span><span class="p">.</span><span class="n">height</span><span class="p">()</span> <span class="o">&lt;</span> <span class="n">bufferHeight</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>            <span class="n">ty</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">(</span><span class="n">bufferHeight</span> <span class="o">-</span> <span class="n">cropRect</span><span class="p">.</span><span class="n">bottom</span><span class="p">)</span> <span class="o">+</span> <span class="n">shrinkAmount</span><span class="p">)</span> <span class="o">/</span> <span class="n">bufferHeight</span><span class="p">;</span>
+</span><span class='line'>            <span class="n">sy</span> <span class="o">=</span> <span class="p">(</span><span class="kt">float</span><span class="p">(</span><span class="n">cropRect</span><span class="p">.</span><span class="n">height</span><span class="p">())</span> <span class="o">-</span> <span class="p">(</span><span class="mf">2.0f</span> <span class="o">*</span> <span class="n">shrinkAmount</span><span class="p">))</span> <span class="o">/</span> <span class="n">bufferHeight</span><span class="p">;</span>
+</span><span class='line'>        <span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'>        <span class="n">mat4</span> <span class="n">crop</span><span class="p">(</span><span class="n">sx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">sy</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tx</span><span class="p">,</span> <span class="n">ty</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span>
+</span><span class='line'>        <span class="n">xform</span> <span class="o">=</span> <span class="n">crop</span> <span class="o">*</span> <span class="n">xform</span><span class="p">;</span>
 </span><span class='line'>    <span class="p">}</span>
+</span><span class='line'>  <span class="p">......</span>
 </span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="p">......</span>
+</span><span class='line'><span class="p">......</span>
 </span></code></pre></td></tr></table></div></figure>
 
 
-<h4>排查 packet 和 frame</h4>
+<p>再看一遍<a href="https://developer.android.com/reference/android/graphics/SurfaceTexture#getTransformMatrix(float[]">SurfaceTexture.getTransformMatrix</a>)发现也有说明。</p>
 
-<p>打印了一下段与段连接地方的 packet 的 packetData 和 frameData，发现 packetData 正常，seek 之后的 frameData 中前面大部分是 0，和上一段结尾解出的 frameData 不一样。记得音频帧可以独立解码，不需要参考前面的帧数据，那问题出现在哪里？</p>
+<p><img src="/images/20210805/getTransformMatrix.png" width="600" alt="" /></p>
 
-<blockquote><p>一个测试：解封装连续，解码之前 flush 一下 decoder，会发现 frameData 基本都是有问题的。</p></blockquote>
+<h2>链接</h2>
 
-<h4>了解 mp3 帧头格式</h4>
-
-<p>很多规则，但是没卵用。</p>
-
-<h4>比特池技术</h4>
-
-<p>最后去查 mp3 的解码过程实现，发现 mp3 使用了比特池技术，当前帧的主数据可能放在上一帧。。。。也就是要实现精准 seek，得往前多 seek 几帧，然后把前面的 frame 丢掉。
-试了一下，结果如预期。</p>
-
-<h3>参考</h3>
-
-<p><a href="https://blog.csdn.net/jgdu1981/article/details/6757498">mp3比特池技术</a><br/>
-<a href="http://journal2.cqupt.edu.cn/jcuptnse/html/2013/1673-825X-25-4-494.html">功耗高集成度MP3解码器IP核设计</a></p>
+<p><a href="https://stackoverflow.com/questions/6023400/opengl-es-texture-coordinates-slightly-off">OpenGL ES Texture Coordinates Slightly Off</a><br/>
+<a href="https://cs.android.com/android/platform/superproject/+/master:frameworks/native/libs/nativedisplay/surfacetexture/SurfaceTexture.cpp;l=275;drc=master;bpv=0;bpt=1">SurfaceTexture::computeTransformMatrix</a><br/>
+<a href="https://developer.android.com/reference/android/graphics/SurfaceTexture#getTransformMatrix(float[]">SurfaceTexture.getTransformMatrix</a>)<br/>
+<a href="https://zhuanlan.zhihu.com/p/143377682">图形学底层探秘 - 纹理采样、环绕、过滤与Mipmap的那些事</a><br/>
+<a href="https://docs.microsoft.com/en-us/windows/win32/direct3d9/directly-mapping-texels-to-pixels">Directly Mapping Texels to Pixels (Direct3D 9)</a></p>
 </div>
   
   
@@ -1521,7 +1585,7 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
   <ul id="recent_posts">
     
       <li class="post">
-        <a href="/blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/">Mp3精准seek与比特池技术</a>
+        <a href="/blog/2021/08/05/wen-li-ju-bu-cai-yang/">纹理局部采样</a>
       </li>
     
       <li class="post">
@@ -1582,7 +1646,7 @@ Mac版的Surge还要自己配置<code>Web Proxy(HTTP)</code>和<code>Secure Web 
     </div>
   </div>
   <footer role="contentinfo"><p>
-  Copyright &copy; 2020 - lvpengwei -
+  Copyright &copy; 2021 - lvpengwei -
   <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
 </p>
 
