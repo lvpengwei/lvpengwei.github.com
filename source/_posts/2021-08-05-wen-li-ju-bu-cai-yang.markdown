@@ -90,6 +90,13 @@ void SurfaceTexture::computeTransformMatrix(float outTransform[16], const sp<Gra
 
 ![](/images/20210805/getTransformMatrix.png =600x)
 
+## 双线性插值（Bilinear Filtering）
+ 双线性插值会取临近 4 个像素的加权平均值。
+ 
+![bilinear_filtering.jpg](https://s2.loli.net/2021/12/11/hgFatmDMCX15T6d.jpg =500x)
+
+上面的情况我们在传递的是图片边缘的 UV 坐标，那么由于双线性采样，它就会采到下面绿色的像素；如果我们传递的 UV 坐标收缩 0.5px，那么边缘外面的像素权重会是 0，就采不到绿色。
+
 ## 链接
 [OpenGL ES Texture Coordinates Slightly Off](https://stackoverflow.com/questions/6023400/opengl-es-texture-coordinates-slightly-off)  
 [SurfaceTexture::computeTransformMatrix](https://cs.android.com/android/platform/superproject/+/master:frameworks/native/libs/nativedisplay/surfacetexture/SurfaceTexture.cpp;l=275;drc=master;bpv=0;bpt=1)  
