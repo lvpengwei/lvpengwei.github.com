@@ -4,7 +4,7 @@
   <title><![CDATA[Category: 采样 | lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//blog/categories/cai-yang/atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2021-12-11T12:38:02+08:00</updated>
+  <updated>2021-12-11T14:06:16+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -107,6 +107,14 @@ void SurfaceTexture::computeTransformMatrix(float outTransform[16], const sp&lt;
 <p>再看一遍<a href="https://developer.android.com/reference/android/graphics/SurfaceTexture#getTransformMatrix(float[]">SurfaceTexture.getTransformMatrix</a>)发现也有说明。</p>
 
 <p><img src="/images/20210805/getTransformMatrix.png" width="600" alt="" /></p>
+
+<h2>双线性插值（Bilinear Filtering）</h2>
+
+<p> 双线性插值会取临近 4 个像素的加权平均值。</p>
+
+<p><img src="https://s2.loli.net/2021/12/11/hgFatmDMCX15T6d.jpg" width="500" alt="bilinear_filtering.jpg" /></p>
+
+<p>上面的情况我们在传递的是图片边缘的 UV 坐标，那么由于双线性采样，它就会采到下面绿色的像素；如果我们传递的 UV 坐标收缩 0.5px，那么边缘外面的像素权重会是 0，就采不到绿色。</p>
 
 <h2>链接</h2>
 
