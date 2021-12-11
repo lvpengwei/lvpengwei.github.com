@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Skia | lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//blog/categories/skia/atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2021-08-05T23:00:25+08:00</updated>
+  <updated>2021-12-11T12:38:02+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -12,6 +12,158 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[纹理边缘抗锯齿 CoverageAA]]></title>
+    <link href="http://lvpengwei.github.io//blog/2021/12/11/wen-li-bian-yuan-kang-ju-chi-coverage-aa/"/>
+    <updated>2021-12-11T12:30:34+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2021/12/11/wen-li-bian-yuan-kang-ju-chi-coverage-aa</id>
+    <content type="html"><![CDATA[<h2>问题</h2>
+
+<p>用 OpenGL 旋转图片的时候，图片边缘会出现锯齿。</p>
+
+<p>图 1 是没有做抗锯齿的时候，可以明显看到边缘的锯齿。</p>
+
+<div align=center>
+<img src="https://s2.loli.net/2021/12/11/QsFLYTfqxGlEWBv.png" width="500"/>
+<br/>
+图 1
+</div>
+
+
+<h2>思路</h2>
+
+<p>首先想到的是 OpenGL 提供的 MSAA，但是 MSAA 占用内存比较多。然后去查了下 skia 的抗锯齿是如何实现的，发现它只是对图片边缘的 1px 做一个 alpha 从 1->0 渐变的遮罩。</p>
+
+<p>如图 2 所示，矩形 abcd 是我们要绘制的区域，根据矩形的坐标向内缩 0.5px 得到矩形 P0_P1_P3_P2，向外扩 0.5px 得到矩形 P4_P5_P7_P6。内矩形里面 alpha 都是 1，外矩形边缘 alpha 都是 0，内矩形和外矩形之间 alpha 从 1->0 渐变。这样我们就对边缘做了一个逐渐消失的效果，从视觉上看，边缘的锯齿就没那么明显了。</p>
+
+<div align=center>
+<img src="https://s2.loli.net/2021/12/05/KtvNZQPdw8SLHTq.png" width="500"/>
+<br/>
+图 2
+</div>
+
+
+<h2>解决</h2>
+
+<h3>没有抗锯齿</h3>
+
+<p>在没有使用抗锯齿时，我们绘制一个矩形，提交的是 cdba 4 个顶点，2 个三角形。
+<code>cpp
+auto bounds = args.rectToDraw;  
+auto normalBounds = Rect::MakeLTRB(0, 0, 1, 1);
+return {  
+  bounds.right, bounds.bottom, normalBounds.right, normalBounds.bottom,  
+  bounds.right, bounds.top, normalBounds.right, normalBounds.top,  
+  bounds.left, bounds.bottom, normalBounds.left, normalBounds.bottom,  
+  bounds.left, bounds.top, normalBounds.left, normalBounds.top,  
+};
+</code>
+对应的绘制命令是
+<code>cpp
+gl-&gt;drawArrays(GL_TRIANGLE_STRIP, 0, 4);
+</code></p>
+
+<h3>抗锯齿 CoverageAA</h3>
+
+<p>在使用 CoverageAA 抗锯齿时，我们绘制一个矩形，提交的是内矩形 P0P1P2P3 和外矩形 P4P5P6P7 的 8 个顶点：
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="k">auto</span> <span class="n">bounds</span> <span class="o">=</span> <span class="n">args</span><span class="p">.</span><span class="n">rectToDraw</span><span class="p">;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">normalBounds</span> <span class="o">=</span> <span class="n">Rect</span><span class="o">::</span><span class="n">MakeLTRB</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">auto</span> <span class="n">padding</span> <span class="o">=</span> <span class="mf">0.5f</span><span class="p">;</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">insetBounds</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">.</span><span class="n">makeInset</span><span class="p">(</span><span class="n">padding</span><span class="p">,</span> <span class="n">padding</span><span class="p">);</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">outsetBounds</span> <span class="o">=</span> <span class="n">bounds</span><span class="p">.</span><span class="n">makeOutset</span><span class="p">(</span><span class="n">padding</span><span class="p">,</span> <span class="n">padding</span><span class="p">);</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="k">auto</span> <span class="n">normalPadding</span> <span class="o">=</span> <span class="n">Point</span><span class="o">::</span><span class="n">Make</span><span class="p">(</span><span class="n">padding</span> <span class="o">/</span> <span class="n">bounds</span><span class="p">.</span><span class="n">width</span><span class="p">(),</span> <span class="n">padding</span> <span class="o">/</span> <span class="n">bounds</span><span class="p">.</span><span class="n">height</span><span class="p">());</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">normalInset</span> <span class="o">=</span> <span class="n">normalBounds</span><span class="p">.</span><span class="n">makeInset</span><span class="p">(</span><span class="n">normalPadding</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">normalPadding</span><span class="p">.</span><span class="n">y</span><span class="p">);</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="k">auto</span> <span class="n">normalOutset</span> <span class="o">=</span> <span class="n">normalBounds</span><span class="p">.</span><span class="n">makeOutset</span><span class="p">(</span><span class="n">normalPadding</span><span class="p">.</span><span class="n">x</span><span class="p">,</span> <span class="n">normalPadding</span><span class="p">.</span><span class="n">y</span><span class="p">);</span>
+</span><span class='line'><span class="k">return</span> <span class="p">{</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="n">insetBounds</span><span class="p">.</span><span class="n">left</span><span class="p">,</span> <span class="n">insetBounds</span><span class="p">.</span><span class="n">top</span><span class="p">,</span> <span class="mf">1.0f</span><span class="p">,</span> <span class="n">normalInset</span><span class="p">.</span><span class="n">left</span><span class="p">,</span> <span class="n">normalInset</span><span class="p">.</span><span class="n">top</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="n">insetBounds</span><span class="p">.</span><span class="n">left</span><span class="p">,</span> <span class="n">insetBounds</span><span class="p">.</span><span class="n">bottom</span><span class="p">,</span> <span class="mf">1.0f</span><span class="p">,</span> <span class="n">normalInset</span><span class="p">.</span><span class="n">left</span><span class="p">,</span> <span class="n">normalInset</span><span class="p">.</span><span class="n">bottom</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="n">insetBounds</span><span class="p">.</span><span class="n">right</span><span class="p">,</span> <span class="n">insetBounds</span><span class="p">.</span><span class="n">top</span><span class="p">,</span> <span class="mf">1.0f</span><span class="p">,</span> <span class="n">normalInset</span><span class="p">.</span><span class="n">right</span><span class="p">,</span> <span class="n">normalInset</span><span class="p">.</span><span class="n">top</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="n">insetBounds</span><span class="p">.</span><span class="n">right</span><span class="p">,</span> <span class="n">insetBounds</span><span class="p">.</span><span class="n">bottom</span><span class="p">,</span> <span class="mf">1.0f</span><span class="p">,</span> <span class="n">normalInset</span><span class="p">.</span><span class="n">right</span><span class="p">,</span> <span class="n">normalInset</span><span class="p">.</span><span class="n">bottom</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="n">outsetBounds</span><span class="p">.</span><span class="n">left</span><span class="p">,</span> <span class="n">outsetBounds</span><span class="p">.</span><span class="n">top</span><span class="p">,</span> <span class="mf">0.0f</span><span class="p">,</span> <span class="n">normalOutset</span><span class="p">.</span><span class="n">left</span><span class="p">,</span> <span class="n">normalOutset</span><span class="p">.</span><span class="n">top</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="n">outsetBounds</span><span class="p">.</span><span class="n">left</span><span class="p">,</span> <span class="n">outsetBounds</span><span class="p">.</span><span class="n">bottom</span><span class="p">,</span> <span class="mf">0.0f</span><span class="p">,</span> <span class="n">normalOutset</span><span class="p">.</span><span class="n">left</span><span class="p">,</span> <span class="n">normalOutset</span><span class="p">.</span><span class="n">bottom</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="n">outsetBounds</span><span class="p">.</span><span class="n">right</span><span class="p">,</span> <span class="n">outsetBounds</span><span class="p">.</span><span class="n">top</span><span class="p">,</span> <span class="mf">0.0f</span><span class="p">,</span> <span class="n">normalOutset</span><span class="p">.</span><span class="n">right</span><span class="p">,</span> <span class="n">normalOutset</span><span class="p">.</span><span class="n">top</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="n">outsetBounds</span><span class="p">.</span><span class="n">right</span><span class="p">,</span> <span class="n">outsetBounds</span><span class="p">.</span><span class="n">bottom</span><span class="p">,</span> <span class="mf">0.0f</span><span class="p">,</span> <span class="n">normalOutset</span><span class="p">.</span><span class="n">right</span><span class="p">,</span> <span class="n">normalOutset</span><span class="p">.</span><span class="n">bottom</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="err">转换成三角形是</span> <span class="mi">30</span> <span class="err">个顶点，下面是三角形的</span> <span class="n">index</span> <span class="err">数据</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span><span class="n">cpp</span>
+</span><span class='line'><span class="k">static</span> <span class="k">constexpr</span> <span class="kt">int</span> <span class="n">kIndicesPerAAFillRect</span> <span class="o">=</span> <span class="mi">30</span><span class="p">;</span>
+</span><span class='line'><span class="k">static</span> <span class="k">constexpr</span> <span class="kt">uint16_t</span> <span class="n">gFillAARectIdx</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="mi">0</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="mi">0</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="p">};</span>
+</span><span class='line'><span class="o">&lt;</span><span class="n">code</span><span class="o">&gt;</span>
+</span><span class='line'><span class="err">绘制命令是</span>
+</span><span class='line'><span class="o">&lt;/</span><span class="n">code</span><span class="o">&gt;</span><span class="n">cpp</span>
+</span><span class='line'><span class="n">glDrawElements</span><span class="p">(</span><span class="n">GL_TRIANGLES</span><span class="p">,</span> <span class="n">kIndicesPerAAFillRect</span><span class="p">,</span> <span class="n">GL_UNSIGNED_SHORT</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<h2>结果</h2>
+
+<p>图 3 是做完抗锯齿的效果，可以看到边缘的锯齿已经没有了。</p>
+
+<div align=center>
+<img src="https://s2.loli.net/2021/12/11/gquEYZ2hc1JM57H.png" width="500"/>
+<br/>
+图 3
+</div>
+
+
+<p>图 4 是图 1 和 图 3 边缘对比的细节，可以看到边缘像素的过渡圆滑了很多。</p>
+
+<div align=center>
+<img src="https://s2.loli.net/2021/12/11/hHuSMsJ8zZbvrVo.png" width="500"/>
+<br/>
+图 4
+</div>
+
+
+<h2>链接</h2>
+
+<p><a href="https://github.com/google/skia">skia</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[iOS NV12转SkImage颜色不正常的问题]]></title>

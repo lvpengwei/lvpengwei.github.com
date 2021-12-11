@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://lvpengwei.github.io//blog/2021/12/11/wen-li-bian-yuan-kang-ju-chi-coverage-aa/</loc>
+<lastmod>2021-12-11T12:30:34+08:00</lastmod>
+</url>
+<url>
 <loc>http://lvpengwei.github.io//blog/2021/08/05/wen-li-ju-bu-cai-yang/</loc>
 <lastmod>2021-08-05T17:21:42+08:00</lastmod>
 </url>
@@ -141,5 +145,14 @@
 </url>
 <url>
 <loc>http://lvpengwei.github.io//blog/categories/crop/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/aa/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/kang-ju-chi/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/bian-yuan/</loc>
 </url>
 </urlset>
