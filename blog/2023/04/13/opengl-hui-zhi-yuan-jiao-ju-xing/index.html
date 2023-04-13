@@ -1,0 +1,371 @@
+
+<!DOCTYPE html>
+<!--[if IEMobile 7 ]><html class="no-js iem7"><![endif]-->
+<!--[if lt IE 9]><html class="no-js lte-ie8"><![endif]-->
+<!--[if (gt IE 8)|(gt IEMobile 7)|!(IEMobile)|!(IE)]><!--><html class="no-js" lang="en"><!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <title>OpenGL 绘制圆角矩形 - lvpengwei’s Blog</title>
+  <meta name="author" content="lvpengwei">
+
+  
+  <meta name="description" content="思路 把圆角矩形分成 9 份，分别是 4 个角（p0p1p5p4、p2p3p7p6、p8p9p13p12、p10p11p15p14），4 个边缘（p1p2p6p5、p4p5p9p8、p6p7p11p10、p9p10p14p13）和 1 个中心（p5p6p10p11）。角的部分画弧，边缘和中心画矩形 &hellip;">
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://lvpengwei.github.io//blog/2023/04/13/opengl-hui-zhi-yuan-jiao-ju-xing/">
+  <link href="/favicon.png" rel="icon">
+  <link href="/stylesheets/screen.css" media="screen, projection" rel="stylesheet" type="text/css">
+  <link href="/atom.xml" rel="alternate" title="lvpengwei’s Blog" type="application/atom+xml">
+  <script src="/javascripts/modernizr-2.0.js"></script>
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+  <script>!window.jQuery && document.write(unescape('%3Cscript src="/javascripts/libs/jquery.min.js"%3E%3C/script%3E'))</script>
+  <script src="/javascripts/octopress.js" type="text/javascript"></script>
+  <!--Fonts from Google"s Web font directory at http://google.com/webfonts -->
+<link href="//fonts.googleapis.com/css?family=PT+Serif:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+<link href="//fonts.googleapis.com/css?family=PT+Sans:regular,italic,bold,bolditalic" rel="stylesheet" type="text/css">
+
+  
+
+
+  <script>
+    var _hmt = _hmt || [];
+    (function() {
+      var hm = document.createElement("script");
+      hm.src = "//hm.baidu.com/hm.js?3bf46f02d4ea4f6cf35efc921deb67fb";
+      var s = document.getElementsByTagName("script")[0]; 
+      s.parentNode.insertBefore(hm, s);
+    })();
+  </script>
+
+</head>
+
+<body   >
+  <header role="banner"><hgroup>
+  <h1><a href="/">lvpengwei’s Blog</a></h1>
+  
+    <h2>学习历程，生活点滴。</h2>
+  
+</hgroup>
+
+</header>
+  <nav role="navigation"><ul class="subscription" data-subscription="rss">
+  <li><a href="/atom.xml" rel="subscribe-rss" title="subscribe via RSS">RSS</a></li>
+  
+</ul>
+  
+<form action="http://google.com/search" method="get">
+  <fieldset role="search">
+    <input type="hidden" name="sitesearch" value="lvpengwei.github.io/">
+    <input class="search" type="text" name="q" results="0" placeholder="Search"/>
+  </fieldset>
+</form>
+  
+<ul class="main-navigation">
+  <li><a href="/">Blog</a></li>
+  <li><a href="/blog/archives">Archives</a></li>
+</ul>
+
+</nav>
+  <div id="main">
+    <div id="content">
+      <head>
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+<script> 
+MathJax = {
+  tex: {
+    inlineMath: [['$', '$']],
+    processEscapes: true
+  }
+};
+</script>
+</head>
+
+<div>
+<article class="hentry" role="article">
+  
+  <header>
+    
+      <h1 class="entry-title">OpenGL 绘制圆角矩形</h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2023-04-13T20:45:20+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2023</span></span> <span class='time'>8:45 pm</span></time>
+        
+           | <a href="#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+<div class="entry-content"><h2>思路</h2>
+
+<p>把圆角矩形分成 9 份，分别是 4 个角（p0p1p5p4、p2p3p7p6、p8p9p13p12、p10p11p15p14），4 个边缘（p1p2p6p5、p4p5p9p8、p6p7p11p10、p9p10p14p13）和 1 个中心（p5p6p10p11）。角的部分画弧，边缘和中心画矩形。</p>
+
+<p><img src="https://s2.loli.net/2021/12/19/1FLUrImOh2WvbVE.png" alt="圆角矩形.png" /></p>
+
+<p>顶点的定义除了常规的屏幕坐标，再提供一个小矩形的坐标，小矩形坐标的作用是计算点到图形轮廓的距离。</p>
+
+<p>传进去的小矩形坐标经过标准化之后，不管是椭圆弧还是圆弧，都转化为半径为 1 的圆弧，根据公式 d = $\sqrt{x^2+y^2}$ - 1 可以计算距离。</p>
+
+<p>中心矩形的小矩形坐标 x, y 都是 0；边缘四个矩形的小矩形坐标要么 x 是 0，要么 y 是 0，所以它计算的是点到边缘直线的距离。角上四个矩形的小矩形坐标计算的是点到圆弧的距离。</p>
+
+<p>点到轮廓的距离为正，在图形外，alpha 为 0；为负在图形内，为 0 在图形上，alpha 为 1。</p>
+
+<p>实现<strong>抗锯齿</strong>时，整个图形的坐标数据扩大 0.5px，用于 coverage 的计算。coverage 的范围是图形轮廓内外各 0.5px，加起来是 1px，也就是点到轮廓的距离[-0.5px, 0.5px]，对应的 alpha 值为[0, 1]。</p>
+
+<p>如果是圆弧的时候，上面的实现没问题，抗锯齿也完成的很好；但是如果是椭圆弧的时候，上面的实现就会出现下面的现象。比如按照比例缩小椭圆 80%，短半径从 5 到 4，长半径从 10 到 8，就是那个实线-内椭圆，和实线-外椭圆相比，它们之间的距离不是均匀的，而我们想要的是距离均匀的椭圆，也就是虚线的椭圆。</p>
+
+<p><img src="https://s2.loli.net/2021/12/24/7IRbwmJlt9TL8BD.png" alt="圆等距线拉伸成椭圆.png" /></p>
+
+<p>所以上面的公式不适合用在椭圆上。</p>
+
+<p>通过 skia 分享的 ppt，我们知道有一个公式可以计算点到椭圆的近似距离。</p>
+
+<blockquote><p>这个公式一般用来检测椭圆，也就是通过一些离散的点来拟合椭圆。</p></blockquote>
+
+<p>$d \approx \frac{f(x, y)}{|\nabla f(x, y)|}$ &mdash;> $d \approx \frac{\frac{x^2}{a^2}+\frac{y^2}{b^2}-1}{\sqrt{(\frac{2x}{a^2})^2+(\frac{2y}{b^2})^2}}$</p>
+
+<p>可以从下面的链接找到这个公式的证明：
+<a href="https://www.researchgate.net/publication/222440289_Sampson_PD_Fitting_conic_sections_to_very_scattered_data_An_iterative_refinement_of_the_Bookstein_algorithm_Comput_Graphics_Image_Process_18_97-108">Fitting conic sections to “very scattered” data: An iterative refinement of the Bookstein algorithm</a>。</p>
+
+<p>vertex shader</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class='glsl'><span class='line'><span class="k">attribute</span> <span class="k">vec2</span> <span class="n">inPosition</span><span class="p">;</span> <span class="c1">// 屏幕坐标</span>
+</span><span class='line'><span class="k">attribute</span> <span class="k">vec2</span> <span class="n">inEllipseOffset</span><span class="p">;</span> <span class="c1">// 小矩形坐标</span>
+</span><span class='line'><span class="k">attribute</span> <span class="k">vec2</span> <span class="n">inEllipseRadii</span><span class="p">;</span> <span class="c1">// 椭圆 1/a, 1/b</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">varying</span> <span class="k">vec2</span> <span class="n">vEllipseOffsets_Stage0</span> <span class="o">=</span> <span class="n">inEllipseOffset</span><span class="p">;</span>
+</span><span class='line'><span class="k">varying</span> <span class="k">vec2</span> <span class="n">vEllipseRadii_Stage0</span> <span class="o">=</span> <span class="n">inEllipseRadii</span><span class="p">;</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>fragment shader</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+</pre></td><td class='code'><pre><code class='glsl'><span class='line'><span class="k">vec2</span> <span class="n">offset</span> <span class="o">=</span> <span class="n">vEllipseOffsets_Stage0</span><span class="o">*</span><span class="n">vEllipseRadii_Stage0</span><span class="p">;</span>
+</span><span class='line'><span class="k">float</span> <span class="n">test</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">offset</span><span class="p">,</span> <span class="n">offset</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">;</span>
+</span><span class='line'><span class="k">vec2</span> <span class="n">grad</span> <span class="o">=</span> <span class="mf">2.0</span><span class="o">*</span><span class="n">offset</span><span class="o">*</span><span class="n">vEllipseRadii_Stage0</span><span class="p">;</span>
+</span><span class='line'><span class="k">float</span> <span class="n">grad_dot</span> <span class="o">=</span> <span class="n">dot</span><span class="p">(</span><span class="n">grad</span><span class="p">,</span> <span class="n">grad</span><span class="p">);</span>
+</span><span class='line'><span class="n">grad_dot</span> <span class="o">=</span> <span class="n">max</span><span class="p">(</span><span class="n">grad_dot</span><span class="p">,</span> <span class="mf">1.1755e-38</span><span class="p">);</span>
+</span><span class='line'><span class="k">float</span> <span class="n">invlen</span> <span class="o">=</span> <span class="n">inversesqrt</span><span class="p">(</span><span class="n">grad_dot</span><span class="p">);</span>
+</span><span class='line'><span class="k">float</span> <span class="n">edgeAlpha</span> <span class="o">=</span> <span class="n">clamp</span><span class="p">(</span><span class="mf">0.5</span><span class="o">-</span><span class="n">test</span><span class="o">*</span><span class="n">invlen</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>顶点的 index 数据，18 个三角形</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="c1">// corners  </span>
+</span><span class='line'><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span>
+</span><span class='line'><span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span>
+</span><span class='line'><span class="mi">8</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span>
+</span><span class='line'><span class="mi">10</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// edges  </span>
+</span><span class='line'><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span>
+</span><span class='line'><span class="mi">4</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span>
+</span><span class='line'><span class="mi">6</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span>
+</span><span class='line'><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// center  </span>
+</span><span class='line'><span class="mi">5</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>上面说的是画一个填充的圆角矩形，还可以画一个 stroke 的圆角矩形，有兴趣可以看下 skia 的<a href="https://github.com/google/skia/blob/1f193df9b393d50da39570dab77a0bb5d28ec8ef/src/gpu/ops/GrOvalOpFactory.cpp#L2377"><code>GrOvalFactory.cpp</code></a></p>
+
+<h2>链接</h2>
+
+<p><a href="https://github.com/google/skia">skia</a><br/>
+<a href="https://www.essentialmath.com/GDC2015/VanVerth_Jim_DrawingAntialiasedEllipse.pdf">DrawingAntialiasedEllipse</a><br/>
+<a href="https://www.researchgate.net/publication/222440289_Sampson_PD_Fitting_conic_sections_to_very_scattered_data_An_iterative_refinement_of_the_Bookstein_algorithm_Comput_Graphics_Image_Process_18_97-108">Sampson, P.D.: Fitting conic sections to “very scattered” data: An iterative refinement of the Bookstein algorithm. Comput. Graphics Image Process. 18, 97-108</a><br/>
+<a href="https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.709.6468&amp;rep=rep1&amp;type=pdf">Evaluating Harker and O’Leary’s Distance Approximation for Ellipse Fitting</a></p>
+</div>
+
+
+  <footer>
+    <p class="meta">
+      
+  
+
+<span class="byline author vcard">Posted by <span class="fn">lvpengwei</span></span>
+
+      
+
+
+
+
+<time class='entry-date' datetime='2023-04-13T20:45:20+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>13</span><span class='date-suffix'>th</span>, <span class='date-year'>2023</span></span> <span class='time'>8:45 pm</span></time>
+      
+
+
+    </p>
+    
+      <div class="sharing">
+  
+  
+  
+</div>
+
+    
+    <p class="meta">
+      
+        <a class="basic-alignment left" href="/blog/2021/12/11/wen-li-bian-yuan-kang-ju-chi-coverage-aa/" title="Previous Post: 纹理边缘抗锯齿 CoverageAA">&laquo; 纹理边缘抗锯齿 CoverageAA</a>
+      
+      
+    </p>
+  </footer>
+</article>
+
+  <section>
+    <h1>Comments</h1>
+    <div id="disqus_thread" aria-live="polite"><noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+</div>
+  </section>
+
+</div>
+
+<aside class="sidebar">
+  
+    <section>
+  <h1>Recent Posts</h1>
+  <ul id="recent_posts">
+    
+      <li class="post">
+        <a href="/blog/2023/04/13/opengl-hui-zhi-yuan-jiao-ju-xing/">OpenGL 绘制圆角矩形</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/12/11/wen-li-bian-yuan-kang-ju-chi-coverage-aa/">纹理边缘抗锯齿 CoverageAA</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2021/08/05/wen-li-ju-bu-cai-yang/">纹理局部采样</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/">Mp3精准seek与比特池技术</a>
+      </li>
+    
+      <li class="post">
+        <a href="/blog/2020/03/07/ru-he-huo-qu-videotoolboxde-reorder-size/">如何获取VideoToolbox的reorder Size</a>
+      </li>
+    
+  </ul>
+</section>
+
+<section>
+  <h1>GitHub Repos</h1>
+  <ul id="gh_repos">
+    <li class="loading">Status updating...</li>
+  </ul>
+  
+  <a href="https://github.com/lvpengwei">@lvpengwei</a> on GitHub
+  
+  <script type="text/javascript">
+    $(document).ready(function(){
+        if (!window.jXHR){
+            var jxhr = document.createElement('script');
+            jxhr.type = 'text/javascript';
+            jxhr.src = '/javascripts/libs/jXHR.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(jxhr, s);
+        }
+
+        github.showRepos({
+            user: 'lvpengwei',
+            count: 0,
+            skip_forks: true,
+            target: '#gh_repos'
+        });
+    });
+  </script>
+  <script src="/javascripts/github.js" type="text/javascript"> </script>
+</section>
+
+
+
+
+
+  
+</aside>
+
+
+    </div>
+  </div>
+  <footer role="contentinfo"><p>
+  Copyright &copy; 2023 - lvpengwei -
+  <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>
+</p>
+
+</footer>
+  
+
+<script type="text/javascript">
+      var disqus_shortname = 'lvpengwei';
+      
+        
+        // var disqus_developer = 1;
+        var disqus_identifier = 'http://lvpengwei.github.io//blog/2023/04/13/opengl-hui-zhi-yuan-jiao-ju-xing/';
+        var disqus_url = 'http://lvpengwei.github.io//blog/2023/04/13/opengl-hui-zhi-yuan-jiao-ju-xing/';
+        var disqus_script = 'embed.js';
+      
+    (function () {
+      var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+      dsq.src = '//' + disqus_shortname + '.disqus.com/' + disqus_script;
+      (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+    }());
+</script>
+
+
+
+
+
+
+
+
+
+
+
+</body>
+</html>
