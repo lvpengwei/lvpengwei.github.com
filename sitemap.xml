@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://lvpengwei.github.io//blog/2023/04/13/pag-zhi-chi-web-zuo-liao-na-xie-shi/</loc>
+<lastmod>2023-04-13T22:51:19+08:00</lastmod>
+</url>
+<url>
 <loc>http://lvpengwei.github.io//blog/2023/04/13/opengl-hui-zhi-yuan-jiao-ju-xing/</loc>
 <lastmod>2023-04-13T20:45:20+08:00</lastmod>
 </url>
@@ -158,5 +162,20 @@
 </url>
 <url>
 <loc>http://lvpengwei.github.io//blog/categories/bian-yuan/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/pag/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/web/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/wasm/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/webassembly/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/emscripten/</loc>
 </url>
 </urlset>

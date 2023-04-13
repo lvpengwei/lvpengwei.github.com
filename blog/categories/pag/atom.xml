@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Pag | lvpengwei’s Blog]]></title>
+  <link href="http://lvpengwei.github.io//blog/categories/pag/atom.xml" rel="self"/>
+  <link href="http://lvpengwei.github.io//"/>
+  <updated>2023-04-13T23:21:15+08:00</updated>
+  <id>http://lvpengwei.github.io//</id>
+  <author>
+    <name><![CDATA[lvpengwei]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[PAG 支持 Web 做了哪些事]]></title>
+    <link href="http://lvpengwei.github.io//blog/2023/04/13/pag-zhi-chi-web-zuo-liao-na-xie-shi/"/>
+    <updated>2023-04-13T22:51:19+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2023/04/13/pag-zhi-chi-web-zuo-liao-na-xie-shi</id>
+    <content type="html"><![CDATA[<h2>思路</h2>
+
+<p>PAG 是纯 C++ 的项目，所以我们可以尝试通过 WebAssembly 在浏览器中运行。</p>
+
+<p>首先我们的目标是先跑通一个纯矢量的 PAG 文件。</p>
+
+<h3>1. 用 freetype 跑通矢量绘制</h3>
+
+<p>我们需要用 emscripten 把 PAG 打成 wasm，PAG 的依赖库有很多，比如 ffmpeg、libpng、libjpeg、libwebp、zlib、pathkit、freetype、opengl 等，要跑通纯矢量的绘制，我们需要一个 OpenGL ES 的环境，再链接 pathkit 和 freetype 这两个库，其他的可以先不管。</p>
+
+<p>寻找 OpenGL ES 的过程绕了一些弯路，不过万幸找到 emscripten 提供了 OpenGL ES 的 API，背后是 webgl 的实现。</p>
+
+<p>wasm 链接第三方库也是 .a 的后缀，不过要用<code>emcamke</code>来生成 makefile，它会带入 emscripten 的环境变量，再去 build 就可以得到 wasm 支持的 .a。</p>
+
+<p>把这两个库编译完，还需要一个 binding 文件来桥接 js 和 c++ 的代码，最后用<code>emcc</code>把 libpag.a、pathkit.a、freetype.a、binding.cpp 链接在一起生成 wasm 文件。</p>
+
+<h3>2. 视频序列帧</h3>
+
+<p>PAG 在其他平台是通过解码器来解码视频，web 平台不提供视频解码器，所以我们把 PAG 里面的裸 h264 流封装成 mp4 再放到 video 标签中播放，通过 seek 来控制进度，通过 <a href="https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/texImage2D">txtImage2D</a>来上传<a href="https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLVideoElement">HTMLVideoElement</a>的内容。</p>
+
+<p>HTMLVideoElement 的 seek 是真的 seek，它没有做任何优化，所以当时间在一个 GOP 结尾的时候，HTMLVideoElement 的 seek 耗时非常久。因为 web 端的 PAG 只用于播放，不发生导出，所以这里画面没有对上也没关系，我们采用让它 play 起来，当下次请求时判断它当前的时间和我们请求的时间是否超过一个阈值，没有超过就不发生 seek；当有一段时间没有发生请求，就会自动暂停。</p>
+
+<h3>3. 图片解码</h3>
+
+<p>web 端对包大小很敏感，所以要尽量减少第三方库的依赖，像 png、jpg 的解码，web 的 image 标签就可以做到，然后通过<code>txtImage2D</code>上传到纹理，而 webp 因为平台的原因，浏览器不一定支持，这个库就不能去掉。</p>
+
+<h3>4. 文字</h3>
+
+<p>一开始我们用 freetype 来适配 web 端的文字渲染，搞完之后发现，web 没法提供系统字体的路径，如果用 freetype 来处理字体，需要在服务器上配置字体文件，web 端去下载注册到 freetype 中，而中文字体文件一般比较大，macOS 的苹方字体有 100M+，显然用户体验不会很好。我们去查了 flutter-web 的实现，它用的是 skia 的 web 版本，叫 <a href="https://skia.org/docs/user/modules/canvaskit/">CanvasKit</a>，他们也是先下载字体然后注册之后使用。
+我们调研了一下，可以用 web-font 来加载系统字体，用 web-canvas 来渲染，path 也可以用 web-canvas 渲染，这样 freetype 依赖就可以去掉，包又小了一点。</p>
+
+<h3>5. 包大小</h3>
+
+<p>做完以上这些，PAG 适配 web 端基本完成了，测试了一下包大小</p>
+
+<table>
+   <tr>
+      <td></td>
+      <td>size</td>
+      <td>gzip</td>
+   </tr>
+    <tr>
+      <td>CanvasKit</td>
+      <td>6.6M</td>
+      <td>2.7M</td>
+   </tr>
+   <tr>
+      <td>pag</td>
+      <td>2.2M</td>
+      <td>643K</td>
+   </tr>
+</table>
+
+
+<h3>6. 性能</h3>
+
+<p>上面的弄完之后，发现每帧耗时都比较高，要 30ms+，通过浏览器的 Performance 工具发现是 OpenGL 调用耗时比较高，查看了 emscripten 的文章 <a href="https://emscripten.org/docs/optimizing/Optimizing-WebGL.html">Optimizing WebGL</a>，按照上面的建议逐个排查，去掉 <code>glGet*</code>、<code>glGetError</code>、<code>glCheckFramebufferStatus</code>之后，每帧耗时明显降低。</p>
+
+<h3>7. PixiJS</h3>
+
+<p>之前的封装是基于 canvas 的，从 web 的 canvas 中创建<code>webgl</code>的 context，然后 PAG 在这个 context 中渲染。但是业务方是 web 端的视频编辑场景，可能加载很多个 PAG，webgl context 超出了浏览器的上限。</p>
+
+<p>因为业务方使用的 <a href="https://pixijs.com/">PixiJS</a> 本身就有一个 context，所以我们想直接共用一个 context，不再重新创建。</p>
+
+<p>通过调查，<a href="https://pixijs.download/release/docs/PIXI.Resource.html">PIXI.Resource</a>可以做到这件事，在回调方法<a href="https://pixijs.download/release/docs/PIXI.Resource.html#upload"><code>upload</code></a>中，PixiJS 会传入<code>PIXI.Renderer</code>和<code>PIXI.GLTexture</code>，通过<code>PIXI.Renderer</code>我们可以拿到 webgl 的 context，通过<code>PIXI.GLTexture</code>我们可以拿到 webgl 的 texture，我们再把 context 和 texture 注册到 emscripten 的 GL 中，再用注册后的 texture 去创建 PAGSurface，就可以完成渲染。</p>
+
+<p>这里要注意的是，<code>upload</code>传进来的 texture 可能会发生改变，所以在发现 texture 改变的时候，要从 emscripten 的 GL 中解注册，重新注册一个新的 texture，再创建一个新的 PAGSurface 去渲染。</p>
+
+<p>调整进度接口直接写在这个<code>PIXI.Resource</code>的子类里面，再调用一下<code>update</code>方法，等 PixiJS 回调<code>upload</code>。</p>
+
+<p>示例代码如下
+```ts
+import { Resource } from &lsquo;pixi.js&rsquo;;</p>
+
+<p>class PAGResource extends Resource {<br/>
+  static async create(PAG, pagFile) {<br/>
+    const width = await pagFile.width();<br/>
+    const height = await pagFile.height();<br/>
+    const pagResource = new PAGResource(width, height);<br/>
+    pagResource.pagPlayer = await PAG.PAGPlayer.create();<br/>
+    await pagResource.pagPlayer.setComposition(pagFile);<br/>
+    pagResource.module = PAG;<br/>
+    return pagResource;<br/>
+  }</p>
+
+<p>  private module;<br/>
+  private contextID = null;<br/>
+  private textureID = null;<br/>
+  private pagPlayer = null;<br/>
+  private pagSurface = null;</p>
+
+<p>  constructor(width, height) {<br/>
+    super(width, height);<br/>
+  }</p>
+
+<p>  async upload(renderer, baseTexture, glTexture) {<br/>
+    const { width } = this;<br/>
+    const { height } = this;<br/>
+    glTexture.width = width;<br/>
+    glTexture.height = height;</p>
+
+<pre><code>const { gl } = renderer;  
+
+// 注册 context  
+if (this.contextID === null) {  
+  this.contextID = this.module.GL.registerContext(gl, { majorVersion: 2, minorVersion: 0 });  
+}  
+
+if (glTexture.texture.name !== this.textureID) {  
+  // texture 变化  
+  if (this.textureID !== null) {  
+    // 销毁旧的 surface  
+    this.module.GL.textures[this.textureID] = null;  
+    this.pagSurface.destroy();  
+  }  
+  // 分配内存不然绑定 frameBuffer 会失败  
+gl.texImage2D(  
+    baseTexture.target,  
+    0,  
+    baseTexture.format,  
+    width,  
+    height,  
+    0,  
+    baseTexture.format,  
+    baseTexture.type,  
+    null,  
+  );  
+  // 注册  
+  this.textureID = this.module.GL.getNewId(this.module.GL.textures);  
+  glTexture.texture.name = this.textureID;  
+  this.module.GL.textures[this.textureID] = glTexture.texture;  
+  // 生成 surface  
+  this.module.GL.makeContextCurrent(this.contextID);  
+  this.pagSurface = await this.module._PAGSurface.FromTexture(this.textureID, width, height, false);  
+  await this.pagPlayer.setSurface(this.pagSurface);  
+}  
+await this.pagPlayer.flush();  
+renderer.reset();  
+return true;  
+</code></pre>
+
+<p>  }</p>
+
+<p>  public async setProgress(progress) {<br/>
+    await this.pagPlayer.setProgress(progress);<br/>
+    this.update();<br/>
+  }<br/>
+}
+```</p>
+
+<h2>链接</h2>
+
+<p><a href="https://developer.mozilla.org/zh-CN/docs/WebAssembly">WebAssembly</a><br/>
+<a href="https://emscripten.org/">emscripten</a><br/>
+<a href="https://pixijs.com/">PixiJS</a></p>
+]]></content>
+  </entry>
+  
+</feed>
