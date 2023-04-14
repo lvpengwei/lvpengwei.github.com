@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Wasm | lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//blog/categories/wasm/atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2023-04-13T23:21:15+08:00</updated>
+  <updated>2023-04-14T20:33:13+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -89,84 +89,159 @@
 <p>调整进度接口直接写在这个<code>PIXI.Resource</code>的子类里面，再调用一下<code>update</code>方法，等 PixiJS 回调<code>upload</code>。</p>
 
 <p>示例代码如下
-```ts
-import { Resource } from &lsquo;pixi.js&rsquo;;</p>
-
-<p>class PAGResource extends Resource {<br/>
-  static async create(PAG, pagFile) {<br/>
-    const width = await pagFile.width();<br/>
-    const height = await pagFile.height();<br/>
-    const pagResource = new PAGResource(width, height);<br/>
-    pagResource.pagPlayer = await PAG.PAGPlayer.create();<br/>
-    await pagResource.pagPlayer.setComposition(pagFile);<br/>
-    pagResource.module = PAG;<br/>
-    return pagResource;<br/>
-  }</p>
-
-<p>  private module;<br/>
-  private contextID = null;<br/>
-  private textureID = null;<br/>
-  private pagPlayer = null;<br/>
-  private pagSurface = null;</p>
-
-<p>  constructor(width, height) {<br/>
-    super(width, height);<br/>
-  }</p>
-
-<p>  async upload(renderer, baseTexture, glTexture) {<br/>
-    const { width } = this;<br/>
-    const { height } = this;<br/>
-    glTexture.width = width;<br/>
-    glTexture.height = height;</p>
-
-<pre><code>const { gl } = renderer;  
-
-// 注册 context  
-if (this.contextID === null) {  
-  this.contextID = this.module.GL.registerContext(gl, { majorVersion: 2, minorVersion: 0 });  
-}  
-
-if (glTexture.texture.name !== this.textureID) {  
-  // texture 变化  
-  if (this.textureID !== null) {  
-    // 销毁旧的 surface  
-    this.module.GL.textures[this.textureID] = null;  
-    this.pagSurface.destroy();  
-  }  
-  // 分配内存不然绑定 frameBuffer 会失败  
-gl.texImage2D(  
-    baseTexture.target,  
-    0,  
-    baseTexture.format,  
-    width,  
-    height,  
-    0,  
-    baseTexture.format,  
-    baseTexture.type,  
-    null,  
-  );  
-  // 注册  
-  this.textureID = this.module.GL.getNewId(this.module.GL.textures);  
-  glTexture.texture.name = this.textureID;  
-  this.module.GL.textures[this.textureID] = glTexture.texture;  
-  // 生成 surface  
-  this.module.GL.makeContextCurrent(this.contextID);  
-  this.pagSurface = await this.module._PAGSurface.FromTexture(this.textureID, width, height, false);  
-  await this.pagPlayer.setSurface(this.pagSurface);  
-}  
-await this.pagPlayer.flush();  
-renderer.reset();  
-return true;  
-</code></pre>
-
-<p>  }</p>
-
-<p>  public async setProgress(progress) {<br/>
-    await this.pagPlayer.setProgress(progress);<br/>
-    this.update();<br/>
-  }<br/>
-}
-```</p>
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+</pre></td><td class='code'><pre><code class='ts'><span class='line'><span class="kr">import</span> <span class="p">{</span> <span class="nx">Resource</span> <span class="p">}</span> <span class="nx">from</span> <span class="o">&amp;</span><span class="nx">lsquo</span><span class="p">;</span><span class="nx">pixi</span><span class="p">.</span><span class="nx">js</span><span class="o">&amp;</span><span class="nx">rsquo</span><span class="p">;;</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="kr">class</span> <span class="nx">PAGResource</span> <span class="kr">extends</span> <span class="nx">Resource</span> <span class="p">{</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="kr">static</span> <span class="nx">async</span> <span class="nx">create</span><span class="p">(</span><span class="nx">PAG</span><span class="p">,</span> <span class="nx">pagFile</span><span class="p">)</span> <span class="p">{</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="nx">width</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">pagFile</span><span class="p">.</span><span class="nx">width</span><span class="p">();</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="nx">height</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">pagFile</span><span class="p">.</span><span class="nx">height</span><span class="p">();</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="nx">pagResource</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">PAGResource</span><span class="p">(</span><span class="nx">width</span><span class="p">,</span> <span class="nx">height</span><span class="p">);</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="nx">pagResource</span><span class="p">.</span><span class="nx">pagPlayer</span> <span class="o">=</span> <span class="nx">await</span> <span class="nx">PAG</span><span class="p">.</span><span class="nx">PAGPlayer</span><span class="p">.</span><span class="nx">create</span><span class="p">();</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="nx">await</span> <span class="nx">pagResource</span><span class="p">.</span><span class="nx">pagPlayer</span><span class="p">.</span><span class="nx">setComposition</span><span class="p">(</span><span class="nx">pagFile</span><span class="p">);</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="nx">pagResource</span><span class="p">.</span><span class="nx">module</span> <span class="o">=</span> <span class="nx">PAG</span><span class="p">;</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="k">return</span> <span class="nx">pagResource</span><span class="p">;</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>  <span class="kr">private</span> <span class="nx">module</span><span class="p">;</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="kr">private</span> <span class="nx">contextID</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="kr">private</span> <span class="nx">textureID</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="kr">private</span> <span class="nx">pagPlayer</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="kr">private</span> <span class="nx">pagSurface</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>  <span class="kr">constructor</span><span class="p">(</span><span class="nx">width</span><span class="p">,</span> <span class="nx">height</span><span class="p">)</span> <span class="p">{</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="kr">super</span><span class="p">(</span><span class="nx">width</span><span class="p">,</span> <span class="nx">height</span><span class="p">);</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>  <span class="nx">async</span> <span class="nx">upload</span><span class="p">(</span><span class="nx">renderer</span><span class="p">,</span> <span class="nx">baseTexture</span><span class="p">,</span> <span class="nx">glTexture</span><span class="p">)</span> <span class="p">{</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="p">{</span> <span class="nx">width</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="kr">const</span> <span class="p">{</span> <span class="nx">height</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">;</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="nx">glTexture</span><span class="p">.</span><span class="nx">width</span> <span class="o">=</span> <span class="nx">width</span><span class="p">;</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="nx">glTexture</span><span class="p">.</span><span class="nx">height</span> <span class="o">=</span> <span class="nx">height</span><span class="p">;</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">pre</span><span class="o">&gt;&lt;</span><span class="nx">code</span><span class="o">&gt;</span><span class="kr">const</span> <span class="p">{</span> <span class="nx">gl</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">renderer</span><span class="p">;</span>
+</span><span class='line'>
+</span><span class='line'><span class="c1">// 注册 context  </span>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">contextID</span> <span class="o">===</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">contextID</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="kr">module</span><span class="nx">.GL.registerContext</span><span class="p">(</span><span class="nx">gl</span><span class="p">,</span> <span class="p">{</span> <span class="nx">majorVersion</span>: <span class="kt">2</span><span class="p">,</span> <span class="nx">minorVersion</span>: <span class="kt">0</span> <span class="p">});</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'>
+</span><span class='line'><span class="k">if</span> <span class="p">(</span><span class="nx">glTexture</span><span class="p">.</span><span class="nx">texture</span><span class="p">.</span><span class="nx">name</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">textureID</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>  <span class="c1">// texture 变化  </span>
+</span><span class='line'>  <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">textureID</span> <span class="o">!==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+</span><span class='line'>    <span class="c1">// 销毁旧的 surface  </span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="kr">module</span><span class="nx">.GL.textures</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">textureID</span><span class="p">]</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">pagSurface</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+</span><span class='line'>  <span class="p">}</span>
+</span><span class='line'>  <span class="c1">// 分配内存不然绑定 frameBuffer 会失败  </span>
+</span><span class='line'><span class="nx">gl</span><span class="p">.</span><span class="nx">texImage2D</span><span class="p">(</span>
+</span><span class='line'>    <span class="nx">baseTexture</span><span class="p">.</span><span class="nx">target</span><span class="p">,</span>
+</span><span class='line'>    <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">baseTexture</span><span class="p">.</span><span class="nx">format</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">width</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">height</span><span class="p">,</span>
+</span><span class='line'>    <span class="mi">0</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">baseTexture</span><span class="p">.</span><span class="nx">format</span><span class="p">,</span>
+</span><span class='line'>    <span class="nx">baseTexture</span><span class="p">.</span><span class="nx">type</span><span class="p">,</span>
+</span><span class='line'>    <span class="kc">null</span><span class="p">,</span>
+</span><span class='line'>  <span class="p">);</span>
+</span><span class='line'>  <span class="c1">// 注册  </span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">textureID</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="kr">module</span><span class="nx">.GL.getNewId</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="kr">module</span><span class="nx">.GL.textures</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">glTexture</span><span class="p">.</span><span class="nx">texture</span><span class="p">.</span><span class="nx">name</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">textureID</span><span class="p">;</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="kr">module</span><span class="nx">.GL.textures</span><span class="p">[</span><span class="k">this</span><span class="p">.</span><span class="nx">textureID</span><span class="p">]</span> <span class="o">=</span> <span class="nx">glTexture</span><span class="p">.</span><span class="nx">texture</span><span class="p">;</span>
+</span><span class='line'>  <span class="c1">// 生成 surface  </span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="kr">module</span><span class="nx">.GL.makeContextCurrent</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">contextID</span><span class="p">);</span>
+</span><span class='line'>  <span class="k">this</span><span class="p">.</span><span class="nx">pagSurface</span> <span class="o">=</span> <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="kr">module</span><span class="nx">._PAGSurface.FromTexture</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">textureID</span><span class="p">,</span> <span class="nx">width</span><span class="p">,</span> <span class="nx">height</span><span class="p">,</span> <span class="kc">false</span><span class="p">);</span>
+</span><span class='line'>  <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">pagPlayer</span><span class="p">.</span><span class="nx">setSurface</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">pagSurface</span><span class="p">);</span>
+</span><span class='line'><span class="p">}</span>
+</span><span class='line'><span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">pagPlayer</span><span class="p">.</span><span class="nx">flush</span><span class="p">();</span>
+</span><span class='line'><span class="nx">renderer</span><span class="p">.</span><span class="nx">reset</span><span class="p">();</span>
+</span><span class='line'><span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
+</span><span class='line'><span class="o">&lt;</span><span class="err">/code&gt;&lt;/pre&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>  <span class="p">}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span>  <span class="kr">public</span> <span class="nx">async</span> <span class="nx">setProgress</span><span class="p">(</span><span class="nx">progress</span><span class="p">)</span> <span class="p">{</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="nx">await</span> <span class="k">this</span><span class="p">.</span><span class="nx">pagPlayer</span><span class="p">.</span><span class="nx">setProgress</span><span class="p">(</span><span class="nx">progress</span><span class="p">);</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>    <span class="k">this</span><span class="p">.</span><span class="nx">update</span><span class="p">();</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">}</span><span class="o">&lt;</span><span class="nx">br</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="p">}</span>
+</span></code></pre></td></tr></table></div></figure></p>
 
 <h2>链接</h2>
 

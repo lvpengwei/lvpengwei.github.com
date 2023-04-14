@@ -4,7 +4,7 @@
   <title><![CDATA[lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2023-04-13T23:20:42+08:00</updated>
+  <updated>2023-04-14T20:33:13+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -250,7 +250,7 @@
   </entry>
   
   <entry>
-    <title type="html"><![CDATA[OpenGL 绘制圆角矩形]]></title>
+    <title type="html"><![CDATA[OpenGL 绘制抗锯齿的圆角矩形]]></title>
     <link href="http://lvpengwei.github.io//blog/2023/04/13/opengl-hui-zhi-yuan-jiao-ju-xing/"/>
     <updated>2023-04-13T20:45:20+08:00</updated>
     <id>http://lvpengwei.github.io//blog/2023/04/13/opengl-hui-zhi-yuan-jiao-ju-xing</id>
