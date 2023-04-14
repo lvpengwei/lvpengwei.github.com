@@ -1,9 +1,10 @@
 ---
 layout: post
-title: "OpenGL 绘制圆角矩形"
+title: "OpenGL 绘制抗锯齿的圆角矩形"
 date: 2023-04-13 20:45:20 +0800
 comments: true
 categories: 
+styles: latex
 ---
 
 ## 思路
