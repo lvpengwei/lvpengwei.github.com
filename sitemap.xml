@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
+<loc>http://lvpengwei.github.io//blog/2023/04/24/pag-qu-diao-skia-hou-ru-he-xuan-ran-path/</loc>
+<lastmod>2023-04-24T21:37:16+08:00</lastmod>
+</url>
+<url>
 <loc>http://lvpengwei.github.io//blog/2023/04/13/pag-zhi-chi-web-zuo-liao-na-xie-shi/</loc>
 <lastmod>2023-04-13T22:51:19+08:00</lastmod>
 </url>
@@ -177,5 +181,14 @@
 </url>
 <url>
 <loc>http://lvpengwei.github.io//blog/categories/emscripten/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/pathkit/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/path-render/</loc>
+</url>
+<url>
+<loc>http://lvpengwei.github.io//blog/categories/2d/</loc>
 </url>
 </urlset>

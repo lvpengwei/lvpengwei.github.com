@@ -9,9 +9,8 @@
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="最近接了一个内部工具开发的需求：运营人员需要生成商品尺码图片，之前他们是用PS做的，现在想让我们做个程序工具化这个过程。 刚拿到这个需求，分析之后，想了两个方案： APP生成图片，导出到电脑
-h5生成图片save到电脑
-脚本生成，因为UI比较复杂，需要获取数据，所以排除 由于对APP开发比较熟悉 &hellip;">
+  <meta name="description" content="迪斯尼乐拍通App里面的照片导出收费，而且费用很高，我通过抓包拿到App里面的图片链接然后使用脚本下载解析得到高清的图片（非原图）
+代码：Disneyphotopass-export 过程 抓包：使用Charles拿到某张图片的链接，下载下来之后发现是另外一个图片，如下图，这时候就蛋疼了， &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -81,6 +80,78 @@ h5生成图片save到电脑
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2016/12/31/dao-chu-di-si-ni-le-pai-tong-li-de-zhao-pian/">导出迪斯尼乐拍通里的照片</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2016-12-31T20:42:21+08:00'><span class='date'><span class='date-month'>Dec</span> <span class='date-day'>31</span><span class='date-suffix'>st</span>, <span class='date-year'>2016</span></span> <span class='time'>8:42 pm</span></time>
+        
+           | <a href="/blog/2016/12/31/dao-chu-di-si-ni-le-pai-tong-li-de-zhao-pian/#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io//blog/2016/12/31/dao-chu-di-si-ni-le-pai-tong-li-de-zhao-pian/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><blockquote><p>迪斯尼乐拍通App里面的照片导出收费，而且费用很高，我通过抓包拿到App里面的图片链接然后使用脚本下载解析得到高清的图片（非原图）
+代码：<a href="https://github.com/lvpengwei/Disneyphotopass-export">Disneyphotopass-export</a></p></blockquote>
+
+<h3>过程</h3>
+
+<ol>
+<li><strong>抓包</strong>：使用Charles拿到某张图片的链接，下载下来之后发现是另外一个图片，如下图，这时候就蛋疼了，那我需要的那张图去哪了，而且这张图片的分辨率不高，按理说不会这么大，那么猜测我需要的那张图就藏在这返回的数据里面   <br/>
+<img src="http://www.disneyphotopass.com.cn:4000/media/d14acc0d4a274d3154486fe481c634dbfff6cffcf8681e56bfb8fd8f03648f0616a3ce5b8a0ee8d8890cb2c68dfe6a466d20010501d7d081d21c2941b053a89d72d589b23d5caffdd71cf7564126e5db538a3998bf98b4cc39ae265aa5676705" alt="enter image description here" /></li>
+<li><strong>隐写术</strong>：之前不知道这个概念，所以我就进行了各种尝试去找
+
+<ul>
+<li>是否是gif</li>
+<li>使用iOS ImageIO的API去看是不是在图片的exif里面</li>
+<li>然后问了伟哥，是否有方法把一张图片放在另外一张图片里，伟哥说“有好多图片隐写的方法你可以搜一下”   <br/>
+算是找到了这种方案的一个术语-<strong>隐写</strong>，然后发现其中一种隐写方法的解析工具<a href="https://github.com/devttys0/binwalk">binwork</a>，拿出之前下载的图片试一下，果然里面放了两张图片，如下图
+<img src="/images/20161231/E7997AA4-F8CF-41E5-A10E-CF3C205B45F1.png" width="500" alt="enter image description here" /></li>
+</ul>
+</li>
+<li><strong>解析</strong>：使用命令可以解出想要的图片<code>dd if=image-download/1 bs=1 skip=10103 of=image/1.jpg</code>
+<img src="/images/20161231/80F75B59-CAC7-427B-9E19-2C31B19BA0DE.png" width="500" alt="enter image description here" /></li>
+</ol>
+
+
+<h3>脚本</h3>
+
+<p>然后把这个过程写成一个脚本，输入是一行一个链接的文本，输出是想要的图片，脚本来做下载和解析。</p>
+
+<h3>tokenId获取</h3>
+
+<p>脚本可以自动收集链接，需要抓包获取tokenId</p>
+
+<ol>
+<li>使用浏览器(Chrome)：登录网页版<a href="https://disneyphotopass.com.cn/">乐拍通</a>，然后<code>检查(Inspect)</code>去<code>网络(Network)</code>里找</li>
+<li>乐拍通App抓包</li>
+</ol>
+
+
+<h3>链接的收集(Deprecated)</h3>
+
+<p>给手机设上代理，打开乐拍通，进入图片详情，然后一张一张滑过去，然后过滤一下，全选，右击，Copy URLs，然后粘在一个<code>disneyphotopass</code>文档里，执行脚本，就可以了。
+<img src="/images/20161231/8E02B64D-EC99-438C-B354-3F87C3DCB6BE.png" width="500" alt="enter image description here" /></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -717,6 +788,10 @@ bundle install
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2023/04/24/pag-qu-diao-skia-hou-ru-he-xuan-ran-path/">PAG 去掉 Skia 后如何渲染 Path</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2023/04/13/pag-zhi-chi-web-zuo-liao-na-xie-shi/">PAG 支持 Web 做了哪些事</a>
       </li>
     
@@ -730,10 +805,6 @@ bundle install
     
       <li class="post">
         <a href="/blog/2021/08/05/wen-li-ju-bu-cai-yang/">纹理局部采样</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2020/04/11/mp3jing-zhun-seekyu-bi-te-chi-ji-zhu/">Mp3精准seek与比特池技术</a>
       </li>
     
   </ul>
