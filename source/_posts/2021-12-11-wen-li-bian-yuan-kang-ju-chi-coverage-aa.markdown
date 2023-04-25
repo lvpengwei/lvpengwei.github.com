@@ -12,7 +12,7 @@ categories: aa 抗锯齿 纹理 边缘 skia
 图 1 是没有做抗锯齿的时候，可以明显看到边缘的锯齿。
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/QsFLYTfqxGlEWBv.png" width="500"/>
+<img src="/images/20211211/aa_pag_none.png" width="500"/>
 <br/>
 图 1
 </div>
@@ -23,7 +23,7 @@ categories: aa 抗锯齿 纹理 边缘 skia
 如图 2 所示，矩形 abcd 是我们要绘制的区域，根据矩形的坐标向内缩 0.5px 得到矩形 P0_P1_P3_P2，向外扩 0.5px 得到矩形 P4_P5_P7_P6。内矩形里面 alpha 都是 1，外矩形边缘 alpha 都是 0，内矩形和外矩形之间 alpha 从 1->0 渐变。这样我们就对边缘做了一个逐渐消失的效果，从视觉上看，边缘的锯齿就没那么明显了。
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/05/KtvNZQPdw8SLHTq.png" width="500"/>
+<img src="/images/20211211/CoverageAA _1_.png" width="500"/>
 <br/>
 图 2
 </div>
@@ -91,7 +91,7 @@ glDrawElements(GL_TRIANGLES, kIndicesPerAAFillRect, GL_UNSIGNED_SHORT, 0);
 图 3 是做完抗锯齿的效果，可以看到边缘的锯齿已经没有了。
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/gquEYZ2hc1JM57H.png" width="500"/>
+<img src="/images/20211211/aa_pag.png" width="500"/>
 <br/>
 图 3
 </div>
@@ -99,7 +99,7 @@ glDrawElements(GL_TRIANGLES, kIndicesPerAAFillRect, GL_UNSIGNED_SHORT, 0);
 图 4 是图 1 和 图 3 边缘对比的细节，可以看到边缘像素的过渡圆滑了很多。
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/hHuSMsJ8zZbvrVo.png" width="500"/>
+<img src="/images/20211211/detail.png" width="500"/>
 <br/>
 图 4
 </div>
