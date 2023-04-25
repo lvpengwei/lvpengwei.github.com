@@ -4,7 +4,7 @@
   <title><![CDATA[lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2023-04-24T21:45:11+08:00</updated>
+  <updated>2023-04-25T22:59:31+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -12,6 +12,202 @@
   </author>
   <generator uri="http://octopress.org/">Octopress</generator>
 
+  
+  <entry>
+    <title type="html"><![CDATA[Tgfx 实现 Blend]]></title>
+    <link href="http://lvpengwei.github.io//blog/2023/04/25/tgfxshi-xian-blend/"/>
+    <updated>2023-04-25T22:24:31+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2023/04/25/tgfxshi-xian-blend</id>
+    <content type="html"><![CDATA[<h2>问题</h2>
+
+<p>PAG 文件里的混合模式是从 AE 中导出的，然后使用 skia 内置的混合模式去实现，去掉 skia 之后，需要用原生的 OpenGL 来实现。</p>
+
+<h2>思路</h2>
+
+<p>既然 skia 内置的混合模式可以满足需求，那我们用 OpenGL 实现 skia 支持的就好，先看一下 skia 里面都有哪些混合模式。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="k">enum</span> <span class="k">class</span> <span class="nc">SkBlendMode</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">kClear</span><span class="p">,</span> <span class="c1">//!&lt; replaces destination with zero: fully transparent  </span>
+</span><span class='line'>  <span class="n">kSrc</span><span class="p">,</span> <span class="c1">//!&lt; replaces destination  </span>
+</span><span class='line'>  <span class="n">kDst</span><span class="p">,</span> <span class="c1">//!&lt; preserves destination  </span>
+</span><span class='line'>  <span class="n">kSrcOver</span><span class="p">,</span> <span class="c1">//!&lt; source over destination  </span>
+</span><span class='line'>  <span class="n">kDstOver</span><span class="p">,</span> <span class="c1">//!&lt; destination over source  </span>
+</span><span class='line'>  <span class="n">kSrcIn</span><span class="p">,</span> <span class="c1">//!&lt; source trimmed inside destination  </span>
+</span><span class='line'>  <span class="n">kDstIn</span><span class="p">,</span> <span class="c1">//!&lt; destination trimmed by source  </span>
+</span><span class='line'>  <span class="n">kSrcOut</span><span class="p">,</span> <span class="c1">//!&lt; source trimmed outside destination  </span>
+</span><span class='line'>  <span class="n">kDstOut</span><span class="p">,</span> <span class="c1">//!&lt; destination trimmed outside source  </span>
+</span><span class='line'>  <span class="n">kSrcATop</span><span class="p">,</span> <span class="c1">//!&lt; source inside destination blended with destination  </span>
+</span><span class='line'>  <span class="n">kDstATop</span><span class="p">,</span> <span class="c1">//!&lt; destination inside source blended with source  </span>
+</span><span class='line'>  <span class="n">kXor</span><span class="p">,</span> <span class="c1">//!&lt; each of source and destination trimmed outside the other  </span>
+</span><span class='line'>  <span class="n">kPlus</span><span class="p">,</span> <span class="c1">//!&lt; sum of colors  </span>
+</span><span class='line'>  <span class="n">kModulate</span><span class="p">,</span> <span class="c1">//!&lt; product of premultiplied colors; darkens destination  </span>
+</span><span class='line'>  <span class="n">kScreen</span><span class="p">,</span> <span class="c1">//!&lt; multiply inverse of pixels, inverting result; brightens destination  </span>
+</span><span class='line'>  <span class="n">kLastCoeffMode</span> <span class="o">=</span> <span class="n">kScreen</span><span class="p">,</span> <span class="c1">//!&lt; last porter duff blend mode  </span>
+</span><span class='line'>  <span class="n">kOverlay</span><span class="p">,</span> <span class="c1">//!&lt; multiply or screen, depending on destination  </span>
+</span><span class='line'>  <span class="n">kDarken</span><span class="p">,</span> <span class="c1">//!&lt; darker of source and destination  </span>
+</span><span class='line'>  <span class="n">kLighten</span><span class="p">,</span> <span class="c1">//!&lt; lighter of source and destination  </span>
+</span><span class='line'>  <span class="n">kColorDodge</span><span class="p">,</span> <span class="c1">//!&lt; brighten destination to reflect source  </span>
+</span><span class='line'>  <span class="n">kColorBurn</span><span class="p">,</span> <span class="c1">//!&lt; darken destination to reflect source  </span>
+</span><span class='line'>  <span class="n">kHardLight</span><span class="p">,</span> <span class="c1">//!&lt; multiply or screen, depending on source  </span>
+</span><span class='line'>  <span class="n">kSoftLight</span><span class="p">,</span> <span class="c1">//!&lt; lighten or darken, depending on source  </span>
+</span><span class='line'>  <span class="n">kDifference</span><span class="p">,</span> <span class="c1">//!&lt; subtract darker from lighter with higher contrast  </span>
+</span><span class='line'>  <span class="n">kExclusion</span><span class="p">,</span> <span class="c1">//!&lt; subtract darker from lighter with lower contrast  </span>
+</span><span class='line'>  <span class="n">kMultiply</span><span class="p">,</span> <span class="c1">//!&lt; multiply source with destination, darkening image  </span>
+</span><span class='line'>  <span class="n">kLastSeparableMode</span> <span class="o">=</span> <span class="n">kMultiply</span><span class="p">,</span> <span class="c1">//!&lt; last blend mode operating separately on components  </span>
+</span><span class='line'>  <span class="n">kHue</span><span class="p">,</span> <span class="c1">//!&lt; hue of source with saturation and luminosity of destination  </span>
+</span><span class='line'>  <span class="n">kSaturation</span><span class="p">,</span> <span class="c1">//!&lt; saturation of source with hue and luminosity of destination  </span>
+</span><span class='line'>  <span class="n">kColor</span><span class="p">,</span> <span class="c1">//!&lt; hue and saturation of source with luminosity of destination  </span>
+</span><span class='line'>  <span class="n">kLuminosity</span><span class="p">,</span> <span class="c1">//!&lt; luminosity of source with hue and saturation of destination  </span>
+</span><span class='line'>  <span class="n">kLastMode</span> <span class="o">=</span> <span class="n">kLuminosity</span><span class="p">,</span> <span class="c1">//!&lt; last valid value  </span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img src="http://lvpengwei.github.io//images/20230425/blend.png" alt="blend mode" /></p>
+
+<p>从实现方案上来说，这些混合模式都可以用 shader 来完成。其中<code>kLastCoeffMode</code>以上的混合模式也叫 <a href="https://zh.wikipedia.org/wiki/Alpha%E5%90%88%E6%88%90">PorterDuff 混合模式</a>，它们还可以用 OpenGL 提供的 <code>glBlendFunc</code>来实现 。</p>
+
+<h2>解决</h2>
+
+<h3>coeff blend mode</h3>
+
+<p><code>kLastCoeffMode</code>以上的比较容易，在渲染之前把对应的参数设置好就行。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="k">static</span> <span class="k">constexpr</span> <span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">Blend</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="p">,</span> <span class="kt">unsigned</span><span class="o">&gt;&gt;</span> <span class="n">kBlendCoeffMap</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Clear</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Src</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Dst</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_ONE</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcOver</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstOver</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ONE</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcIn</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstIn</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcOut</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstOut</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcATop</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstATop</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Xor</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Plus</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ONE</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Modulate</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_SRC_COLOR</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Screen</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_COLOR</span><span class="p">}}};</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">glEnable</span><span class="p">(</span><span class="n">GL_BLEND</span><span class="p">);</span>
+</span><span class='line'><span class="n">glBlendFunc</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">);</span>
+</span><span class='line'><span class="n">glBlendEquation</span><span class="p">(</span><span class="n">GL_FUNC_ADD</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>shader blend mode</h3>
+
+<p>用 shader 实现混合模式，我们需要在 shader 中访问当前  frame buffer 上的颜色分量，OpenGL 有一些 extension 提供了 frame buffer fetch 的功能，如下表所示。</p>
+
+<table>
+   <tr>
+      <td>extension</td>
+      <td>color name</td>
+   </tr>
+    <tr>
+      <td>GL_EXT_shader_framebuffer_fetch</td>
+      <td>gl_LastFragData[0]</td>
+   </tr>
+   <tr>
+      <td>GL_NV_shader_framebuffer_fetch</td>
+      <td>gl_LastFragData[0]</td>
+   </tr>
+   <tr>
+      <td>GL_ARM_shader_framebuffer_fetch</td>
+      <td>gl_LastFragColorARM</td>
+   </tr>
+</table>
+
+
+<p><br/></p>
+
+<p>如果当前的 OpenGL 没有提供这些 extension，我们还有一个兜底措施，把这个 frame buffer 的内容复制到一个纹理(<code>dstTexture</code>)上，再把纹理传入 shader。</p>
+
+<p><img src="http://lvpengwei.github.io//images/20230425/blend_dst_texture.png" alt="" /></p>
+
+<p>当然我们不需要把完整的 frame buffer 内容复制一份，因为我们的绘制区域可能只是局部。</p>
+
+<p>复制局部 frame buffer 内容到纹理上，我们使用的是<code>glCopyTexSubImage2D</code>。这里还有一些其他的方式，比如<code>glBlitFramebuffer</code>，用这个的话，需要多创建一个 frame buffer，没有前一个方便和高效。</p>
+
+<p>如果当前 frame buffer 已经绑定了一个纹理，而且当前的 OpenGL 也支持 <code>glTextureBarrier</code>，可以直接把这个绑定的纹理传入 shader，不过在绘制之前要调用一下<code>glTextureBarrier</code>。</p>
+
+<h2>shader 公式</h2>
+
+<p>skia 的 shader 公式来源是 <a href="https://www.w3.org/TR/compositing-1/#advancedcompositing">w3c - Advanced compositing features</a> 的文档。</p>
+
+<blockquote><p>注意：公式里的 RGB 是 Premultiplied 还是 Unpremultiplied。</p></blockquote>
+
+<p>D2D 也有一份 <a href="https://docs.microsoft.com/en-us/windows/win32/direct2d/blend">blend</a> 公式。这两份基本是一样的，w3c 的更全一点。</p>
+
+<h2>总结</h2>
+
+<p>实现混合模式的整个过程，主要就是用 shader 实现的那部分比较复杂，因为需要考虑 OpenGL 的兼容性。</p>
+
+<h2>链接</h2>
+
+<p><a href="https://github.com/google/skia">skia</a><br/>
+<a href="https://stackoverflow.com/questions/23981016/best-method-to-copy-texture-to-texture">best method to copy texture to texture</a><br/>
+<a href="https://stackoverflow.com/questions/38534694/opengl-reading-from-a-texture-unit-currently-bound-to-a-framebuffer">OpenGL Reading from a texture unit currently bound to a framebuffer</a><br/>
+<a href="https://skia.org/docs/user/api/skblendmode_overview/">SkBlendMode Overview</a><br/>
+<a href="https://www.w3.org/TR/compositing-1/#advancedcompositing">w3c - Advanced compositing features</a><br/>
+<a href="https://docs.microsoft.com/en-us/windows/win32/direct2d/blend">D2D - blend</a></p>
+]]></content>
+  </entry>
   
   <entry>
     <title type="html"><![CDATA[PAG 去掉 Skia 后如何渲染 Path]]></title>
@@ -338,7 +534,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 
 <p>把圆角矩形分成 9 份，分别是 4 个角（p0p1p5p4、p2p3p7p6、p8p9p13p12、p10p11p15p14），4 个边缘（p1p2p6p5、p4p5p9p8、p6p7p11p10、p9p10p14p13）和 1 个中心（p5p6p10p11）。角的部分画弧，边缘和中心画矩形。</p>
 
-<p><img src="https://s2.loli.net/2021/12/19/1FLUrImOh2WvbVE.png" alt="圆角矩形.png" /></p>
+<p><img src="http://lvpengwei.github.io//images/20230413/round_rect.png" alt="圆角矩形.png" /></p>
 
 <p>顶点的定义除了常规的屏幕坐标，再提供一个小矩形的坐标，小矩形坐标的作用是计算点到图形轮廓的距离。</p>
 
@@ -352,7 +548,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 
 <p>如果是圆弧的时候，上面的实现没问题，抗锯齿也完成的很好；但是如果是椭圆弧的时候，上面的实现就会出现下面的现象。比如按照比例缩小椭圆 80%，短半径从 5 到 4，长半径从 10 到 8，就是那个实线-内椭圆，和实线-外椭圆相比，它们之间的距离不是均匀的，而我们想要的是距离均匀的椭圆，也就是虚线的椭圆。</p>
 
-<p><img src="https://s2.loli.net/2021/12/24/7IRbwmJlt9TL8BD.png" alt="圆等距线拉伸成椭圆.png" /></p>
+<p><img src="http://lvpengwei.github.io//images/20230413/stretch_into_ellipse.png" alt="圆等距线拉伸成椭圆.png" /></p>
 
 <p>所以上面的公式不适合用在椭圆上。</p>
 
@@ -457,7 +653,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 <p>图 1 是没有做抗锯齿的时候，可以明显看到边缘的锯齿。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/QsFLYTfqxGlEWBv.png" width="500"/>
+<img src="http://lvpengwei.github.io//images/20211211/aa_pag_none.png" width="500"/>
 <br/>
 图 1
 </div>
@@ -470,7 +666,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 <p>如图 2 所示，矩形 abcd 是我们要绘制的区域，根据矩形的坐标向内缩 0.5px 得到矩形 P0_P1_P3_P2，向外扩 0.5px 得到矩形 P4_P5_P7_P6。内矩形里面 alpha 都是 1，外矩形边缘 alpha 都是 0，内矩形和外矩形之间 alpha 从 1->0 渐变。这样我们就对边缘做了一个逐渐消失的效果，从视觉上看，边缘的锯齿就没那么明显了。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/05/KtvNZQPdw8SLHTq.png" width="500"/>
+<img src="http://lvpengwei.github.io//images/20211211/CoverageAA _1_.png" width="500"/>
 <br/>
 图 2
 </div>
@@ -588,7 +784,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 <p>图 3 是做完抗锯齿的效果，可以看到边缘的锯齿已经没有了。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/gquEYZ2hc1JM57H.png" width="500"/>
+<img src="http://lvpengwei.github.io//images/20211211/aa_pag.png" width="500"/>
 <br/>
 图 3
 </div>
@@ -597,7 +793,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 <p>图 4 是图 1 和 图 3 边缘对比的细节，可以看到边缘像素的过渡圆滑了很多。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/hHuSMsJ8zZbvrVo.png" width="500"/>
+<img src="http://lvpengwei.github.io//images/20211211/detail.png" width="500"/>
 <br/>
 图 4
 </div>
@@ -765,7 +961,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 
 <p> 双线性插值会取临近 4 个像素的加权平均值。</p>
 
-<p><img src="https://s2.loli.net/2021/12/11/hgFatmDMCX15T6d.jpg" width="500" alt="bilinear_filtering.jpg" /></p>
+<p><img src="http://lvpengwei.github.io//images/20210805/bilinear_filtering.jpg" width="500" alt="bilinear_filtering.jpg" /></p>
 
 <p>上面的情况我们在传递的是图片边缘的 UV 坐标，那么由于双线性采样，它就会采到下面绿色的像素；如果我们传递的 UV 坐标收缩 0.5px，那么边缘外面的像素权重会是 0，就采不到绿色。</p>
 
@@ -2156,72 +2352,6 @@ git 常见冲突 <a href="http://www.shanhh.com/blog/2013/01/30/git_FAQ/">解决
 git 参考教程 :<br/>
 <a href="http://www.liaoxuefeng.com/wiki/0013739516305929606dd18361248578c67b8067c8c017b000/0013744142037508cf42e51debf49668810645e02887691000">Git教程 - 廖雪峰的官方网站</a><br/>
 <a href="http://git-scm.com/book/zh/%E6%9C%8D%E5%8A%A1%E5%99%A8%E4%B8%8A%E7%9A%84-Git-%E6%9E%B6%E8%AE%BE%E6%9C%8D%E5%8A%A1%E5%99%A8">Git - 架设服务器</a></p>
-]]></content>
-  </entry>
-  
-  <entry>
-    <title type="html"><![CDATA[我的第一篇博客]]></title>
-    <link href="http://lvpengwei.github.io//blog/2014/03/02/my-first-blog/"/>
-    <updated>2014-03-02T15:24:36+08:00</updated>
-    <id>http://lvpengwei.github.io//blog/2014/03/02/my-first-blog</id>
-    <content type="html"><![CDATA[<p><strong>首先介绍一下blog搭建历程。</strong></p>
-
-<p>博客管理工具：<a href="octopress.org">octopress</a></p>
-
-<p>当然第一步你得先安装并了解Git. (<a href="http://git-scm.com/">Install Git</a>)</p>
-
-<p>首先要安装<strong>ruby</strong>，当初我是通过rvm来安装，后来出现了一堆麻烦，所以就放弃了这条路，改为HomeBrew->rbenv->ruby。基本不需要配置环境。</p>
-
-<p>1.<a href="http://brew.sh/index_zh-cn.html">安装Homebrew</a>
-2.<a href="http://octopress.org/docs/setup/rbenv/">安装rbenv</a>：Alternate Installation Using Homebrew<br/>
-3.<a href="http://octopress.org/docs/setup/rbenv/">安装Ruby</a>：Install Ruby 1.9.3</p>
-
-<pre><code>ruby --version //查看ruby版本
-</code></pre>
-
-<p><strong>安装Octopress</strong></p>
-
-<pre><code>git clone git://github.com/imathis/octopress.git octopress
-cd octopress  
-</code></pre>
-
-<p>然后安装依赖</p>
-
-<pre><code>gem install bundler
-rbenv rehash    # If you use rbenv, rehash to be able to run the bundle command
-bundle install
-</code></pre>
-
-<p>最后安装Octopress</p>
-
-<pre><code>rake install
-</code></pre>
-
-<p>简单配置：主要修改_config.yml，这个配置文件都有相应的注释。主要就是改一些博客头，作者名之类的东西。 注意最好把里面的twitter相关的信息全部删掉，否则由于GFW的原因，将会造成页面load很慢。(from <a href="http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/">唐巧</a>)</p>
-
-<p><strong>写博客方法</strong></p>
-
-<ul>
-<li>rake new_post[‘article name’] 生成博文框架，然后修改生成的文件即可</li>
-<li>rake generate 生成静态文件</li>
-<li>rake preview 在本机4000端口生成访问内容</li>
-<li>rake deploy 发布文件</li>
-</ul>
-
-
-<p>博客内容是采用markdown语法，所以需要熟悉一下常用的标签。我用的是Google Chrome的插件&ndash;Minimalist Markdown Editor</p>
-
-<p><strong>高级配置还没有测试，下次更新！</strong></p>
-
-<p><strong>参考</strong></p>
-
-<ul>
-<li><a href="http://octopress.org/docs/setup/">http://octopress.org/docs/setup/</a></li>
-<li><a href="http://beyondvincent.com/blog/2013/08/03/108-creating-a-github-blog-using-octopress/">破船之家</a></li>
-<li><a href="http://shanewfx.github.io/blog/2012/02/16/bulid-blog-by-octopress/">思考的轨迹</a></li>
-<li><a href="http://blog.devtang.com/blog/2012/02/10/setup-blog-based-on-github/">唐巧的技术博客</a></li>
-</ul>
-
 ]]></content>
   </entry>
   

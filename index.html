@@ -9,7 +9,7 @@
   <meta name="author" content="lvpengwei">
 
   
-  <meta name="description" content="问题 在 2D 绘图库中，path 绘制是很重要的一块。 思路 当我们要实现这一块的时候，优先想到的方案是封装一层接口，然后用平台侧的 API 去实现 path 的编辑和绘制，我们再提交到 OpenGL 去上屏。 但是经过调研发现，iOS 和 Mac 的 CGPath、web 的 Path2D &hellip;">
+  <meta name="description" content="问题 PAG 文件里的混合模式是从 AE 中导出的，然后使用 skia 内置的混合模式去实现，去掉 skia 之后，需要用原生的 OpenGL 来实现。 思路 既然 skia 内置的混合模式可以满足需求，那我们用 OpenGL 实现 skia 支持的就好，先看一下 skia 里面都有哪些混合模式 &hellip;">
   
 
   <!-- http://t.co/dKP3o1e -->
@@ -79,6 +79,225 @@
     <div id="content">
       <div class="blog-index">
   
+  
+  
+    <article>
+      
+  <header>
+    
+      <h1 class="entry-title"><a href="/blog/2023/04/25/tgfxshi-xian-blend/">Tgfx 实现 Blend</a></h1>
+    
+    
+      <p class="meta">
+        
+
+
+
+
+<time class='entry-date' datetime='2023-04-25T22:24:31+08:00'><span class='date'><span class='date-month'>Apr</span> <span class='date-day'>25</span><span class='date-suffix'>th</span>, <span class='date-year'>2023</span></span> <span class='time'>10:24 pm</span></time>
+        
+           | <a href="/blog/2023/04/25/tgfxshi-xian-blend/#disqus_thread"
+             data-disqus-identifier="http://lvpengwei.github.io//blog/2023/04/25/tgfxshi-xian-blend/">Comments</a>
+        
+      </p>
+    
+  </header>
+
+
+  <div class="entry-content"><h2>问题</h2>
+
+<p>PAG 文件里的混合模式是从 AE 中导出的，然后使用 skia 内置的混合模式去实现，去掉 skia 之后，需要用原生的 OpenGL 来实现。</p>
+
+<h2>思路</h2>
+
+<p>既然 skia 内置的混合模式可以满足需求，那我们用 OpenGL 实现 skia 支持的就好，先看一下 skia 里面都有哪些混合模式。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="k">enum</span> <span class="k">class</span> <span class="nc">SkBlendMode</span> <span class="p">{</span>
+</span><span class='line'>  <span class="n">kClear</span><span class="p">,</span> <span class="c1">//!&lt; replaces destination with zero: fully transparent  </span>
+</span><span class='line'>  <span class="n">kSrc</span><span class="p">,</span> <span class="c1">//!&lt; replaces destination  </span>
+</span><span class='line'>  <span class="n">kDst</span><span class="p">,</span> <span class="c1">//!&lt; preserves destination  </span>
+</span><span class='line'>  <span class="n">kSrcOver</span><span class="p">,</span> <span class="c1">//!&lt; source over destination  </span>
+</span><span class='line'>  <span class="n">kDstOver</span><span class="p">,</span> <span class="c1">//!&lt; destination over source  </span>
+</span><span class='line'>  <span class="n">kSrcIn</span><span class="p">,</span> <span class="c1">//!&lt; source trimmed inside destination  </span>
+</span><span class='line'>  <span class="n">kDstIn</span><span class="p">,</span> <span class="c1">//!&lt; destination trimmed by source  </span>
+</span><span class='line'>  <span class="n">kSrcOut</span><span class="p">,</span> <span class="c1">//!&lt; source trimmed outside destination  </span>
+</span><span class='line'>  <span class="n">kDstOut</span><span class="p">,</span> <span class="c1">//!&lt; destination trimmed outside source  </span>
+</span><span class='line'>  <span class="n">kSrcATop</span><span class="p">,</span> <span class="c1">//!&lt; source inside destination blended with destination  </span>
+</span><span class='line'>  <span class="n">kDstATop</span><span class="p">,</span> <span class="c1">//!&lt; destination inside source blended with source  </span>
+</span><span class='line'>  <span class="n">kXor</span><span class="p">,</span> <span class="c1">//!&lt; each of source and destination trimmed outside the other  </span>
+</span><span class='line'>  <span class="n">kPlus</span><span class="p">,</span> <span class="c1">//!&lt; sum of colors  </span>
+</span><span class='line'>  <span class="n">kModulate</span><span class="p">,</span> <span class="c1">//!&lt; product of premultiplied colors; darkens destination  </span>
+</span><span class='line'>  <span class="n">kScreen</span><span class="p">,</span> <span class="c1">//!&lt; multiply inverse of pixels, inverting result; brightens destination  </span>
+</span><span class='line'>  <span class="n">kLastCoeffMode</span> <span class="o">=</span> <span class="n">kScreen</span><span class="p">,</span> <span class="c1">//!&lt; last porter duff blend mode  </span>
+</span><span class='line'>  <span class="n">kOverlay</span><span class="p">,</span> <span class="c1">//!&lt; multiply or screen, depending on destination  </span>
+</span><span class='line'>  <span class="n">kDarken</span><span class="p">,</span> <span class="c1">//!&lt; darker of source and destination  </span>
+</span><span class='line'>  <span class="n">kLighten</span><span class="p">,</span> <span class="c1">//!&lt; lighter of source and destination  </span>
+</span><span class='line'>  <span class="n">kColorDodge</span><span class="p">,</span> <span class="c1">//!&lt; brighten destination to reflect source  </span>
+</span><span class='line'>  <span class="n">kColorBurn</span><span class="p">,</span> <span class="c1">//!&lt; darken destination to reflect source  </span>
+</span><span class='line'>  <span class="n">kHardLight</span><span class="p">,</span> <span class="c1">//!&lt; multiply or screen, depending on source  </span>
+</span><span class='line'>  <span class="n">kSoftLight</span><span class="p">,</span> <span class="c1">//!&lt; lighten or darken, depending on source  </span>
+</span><span class='line'>  <span class="n">kDifference</span><span class="p">,</span> <span class="c1">//!&lt; subtract darker from lighter with higher contrast  </span>
+</span><span class='line'>  <span class="n">kExclusion</span><span class="p">,</span> <span class="c1">//!&lt; subtract darker from lighter with lower contrast  </span>
+</span><span class='line'>  <span class="n">kMultiply</span><span class="p">,</span> <span class="c1">//!&lt; multiply source with destination, darkening image  </span>
+</span><span class='line'>  <span class="n">kLastSeparableMode</span> <span class="o">=</span> <span class="n">kMultiply</span><span class="p">,</span> <span class="c1">//!&lt; last blend mode operating separately on components  </span>
+</span><span class='line'>  <span class="n">kHue</span><span class="p">,</span> <span class="c1">//!&lt; hue of source with saturation and luminosity of destination  </span>
+</span><span class='line'>  <span class="n">kSaturation</span><span class="p">,</span> <span class="c1">//!&lt; saturation of source with hue and luminosity of destination  </span>
+</span><span class='line'>  <span class="n">kColor</span><span class="p">,</span> <span class="c1">//!&lt; hue and saturation of source with luminosity of destination  </span>
+</span><span class='line'>  <span class="n">kLuminosity</span><span class="p">,</span> <span class="c1">//!&lt; luminosity of source with hue and saturation of destination  </span>
+</span><span class='line'>  <span class="n">kLastMode</span> <span class="o">=</span> <span class="n">kLuminosity</span><span class="p">,</span> <span class="c1">//!&lt; last valid value  </span>
+</span><span class='line'><span class="p">};</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img src="/images/20230425/blend.png" alt="blend mode" /></p>
+
+<p>从实现方案上来说，这些混合模式都可以用 shader 来完成。其中<code>kLastCoeffMode</code>以上的混合模式也叫 <a href="https://zh.wikipedia.org/wiki/Alpha%E5%90%88%E6%88%90">PorterDuff 混合模式</a>，它们还可以用 OpenGL 提供的 <code>glBlendFunc</code>来实现 。</p>
+
+<h2>解决</h2>
+
+<h3>coeff blend mode</h3>
+
+<p><code>kLastCoeffMode</code>以上的比较容易，在渲染之前把对应的参数设置好就行。</p>
+
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="k">static</span> <span class="k">constexpr</span> <span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">Blend</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="kt">unsigned</span><span class="p">,</span> <span class="kt">unsigned</span><span class="o">&gt;&gt;</span> <span class="n">kBlendCoeffMap</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Clear</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Src</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Dst</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_ONE</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcOver</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstOver</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ONE</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcIn</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstIn</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcOut</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstOut</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcATop</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstATop</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Xor</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Plus</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ONE</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Modulate</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_SRC_COLOR</span><span class="p">}},</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Screen</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_COLOR</span><span class="p">}}};</span>
+</span><span class='line'>
+</span><span class='line'><span class="n">glEnable</span><span class="p">(</span><span class="n">GL_BLEND</span><span class="p">);</span>
+</span><span class='line'><span class="n">glBlendFunc</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">);</span>
+</span><span class='line'><span class="n">glBlendEquation</span><span class="p">(</span><span class="n">GL_FUNC_ADD</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>shader blend mode</h3>
+
+<p>用 shader 实现混合模式，我们需要在 shader 中访问当前  frame buffer 上的颜色分量，OpenGL 有一些 extension 提供了 frame buffer fetch 的功能，如下表所示。</p>
+
+<table>
+   <tr>
+      <td>extension</td>
+      <td>color name</td>
+   </tr>
+    <tr>
+      <td>GL_EXT_shader_framebuffer_fetch</td>
+      <td>gl_LastFragData[0]</td>
+   </tr>
+   <tr>
+      <td>GL_NV_shader_framebuffer_fetch</td>
+      <td>gl_LastFragData[0]</td>
+   </tr>
+   <tr>
+      <td>GL_ARM_shader_framebuffer_fetch</td>
+      <td>gl_LastFragColorARM</td>
+   </tr>
+</table>
+
+
+<p><br/></p>
+
+<p>如果当前的 OpenGL 没有提供这些 extension，我们还有一个兜底措施，把这个 frame buffer 的内容复制到一个纹理(<code>dstTexture</code>)上，再把纹理传入 shader。</p>
+
+<p><img src="/images/20230425/blend_dst_texture.png" alt="" /></p>
+
+<p>当然我们不需要把完整的 frame buffer 内容复制一份，因为我们的绘制区域可能只是局部。</p>
+
+<p>复制局部 frame buffer 内容到纹理上，我们使用的是<code>glCopyTexSubImage2D</code>。这里还有一些其他的方式，比如<code>glBlitFramebuffer</code>，用这个的话，需要多创建一个 frame buffer，没有前一个方便和高效。</p>
+
+<p>如果当前 frame buffer 已经绑定了一个纹理，而且当前的 OpenGL 也支持 <code>glTextureBarrier</code>，可以直接把这个绑定的纹理传入 shader，不过在绘制之前要调用一下<code>glTextureBarrier</code>。</p>
+
+<h2>shader 公式</h2>
+
+<p>skia 的 shader 公式来源是 <a href="https://www.w3.org/TR/compositing-1/#advancedcompositing">w3c - Advanced compositing features</a> 的文档。</p>
+
+<blockquote><p>注意：公式里的 RGB 是 Premultiplied 还是 Unpremultiplied。</p></blockquote>
+
+<p>D2D 也有一份 <a href="https://docs.microsoft.com/en-us/windows/win32/direct2d/blend">blend</a> 公式。这两份基本是一样的，w3c 的更全一点。</p>
+
+<h2>总结</h2>
+
+<p>实现混合模式的整个过程，主要就是用 shader 实现的那部分比较复杂，因为需要考虑 OpenGL 的兼容性。</p>
+
+<h2>链接</h2>
+
+<p><a href="https://github.com/google/skia">skia</a><br/>
+<a href="https://stackoverflow.com/questions/23981016/best-method-to-copy-texture-to-texture">best method to copy texture to texture</a><br/>
+<a href="https://stackoverflow.com/questions/38534694/opengl-reading-from-a-texture-unit-currently-bound-to-a-framebuffer">OpenGL Reading from a texture unit currently bound to a framebuffer</a><br/>
+<a href="https://skia.org/docs/user/api/skblendmode_overview/">SkBlendMode Overview</a><br/>
+<a href="https://www.w3.org/TR/compositing-1/#advancedcompositing">w3c - Advanced compositing features</a><br/>
+<a href="https://docs.microsoft.com/en-us/windows/win32/direct2d/blend">D2D - blend</a></p>
+</div>
+  
+  
+
+
+    </article>
   
   
     <article>
@@ -470,7 +689,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 
 <p>把圆角矩形分成 9 份，分别是 4 个角（p0p1p5p4、p2p3p7p6、p8p9p13p12、p10p11p15p14），4 个边缘（p1p2p6p5、p4p5p9p8、p6p7p11p10、p9p10p14p13）和 1 个中心（p5p6p10p11）。角的部分画弧，边缘和中心画矩形。</p>
 
-<p><img src="https://s2.loli.net/2021/12/19/1FLUrImOh2WvbVE.png" alt="圆角矩形.png" /></p>
+<p><img src="/images/20230413/round_rect.png" alt="圆角矩形.png" /></p>
 
 <p>顶点的定义除了常规的屏幕坐标，再提供一个小矩形的坐标，小矩形坐标的作用是计算点到图形轮廓的距离。</p>
 
@@ -484,7 +703,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 
 <p>如果是圆弧的时候，上面的实现没问题，抗锯齿也完成的很好；但是如果是椭圆弧的时候，上面的实现就会出现下面的现象。比如按照比例缩小椭圆 80%，短半径从 5 到 4，长半径从 10 到 8，就是那个实线-内椭圆，和实线-外椭圆相比，它们之间的距离不是均匀的，而我们想要的是距离均匀的椭圆，也就是虚线的椭圆。</p>
 
-<p><img src="https://s2.loli.net/2021/12/24/7IRbwmJlt9TL8BD.png" alt="圆等距线拉伸成椭圆.png" /></p>
+<p><img src="/images/20230413/stretch_into_ellipse.png" alt="圆等距线拉伸成椭圆.png" /></p>
 
 <p>所以上面的公式不适合用在椭圆上。</p>
 
@@ -612,7 +831,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 <p>图 1 是没有做抗锯齿的时候，可以明显看到边缘的锯齿。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/QsFLYTfqxGlEWBv.png" width="500"/>
+<img src="/images/20211211/aa_pag_none.png" width="500"/>
 <br/>
 图 1
 </div>
@@ -625,7 +844,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 <p>如图 2 所示，矩形 abcd 是我们要绘制的区域，根据矩形的坐标向内缩 0.5px 得到矩形 P0_P1_P3_P2，向外扩 0.5px 得到矩形 P4_P5_P7_P6。内矩形里面 alpha 都是 1，外矩形边缘 alpha 都是 0，内矩形和外矩形之间 alpha 从 1->0 渐变。这样我们就对边缘做了一个逐渐消失的效果，从视觉上看，边缘的锯齿就没那么明显了。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/05/KtvNZQPdw8SLHTq.png" width="500"/>
+<img src="/images/20211211/CoverageAA _1_.png" width="500"/>
 <br/>
 图 2
 </div>
@@ -743,7 +962,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 <p>图 3 是做完抗锯齿的效果，可以看到边缘的锯齿已经没有了。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/gquEYZ2hc1JM57H.png" width="500"/>
+<img src="/images/20211211/aa_pag.png" width="500"/>
 <br/>
 图 3
 </div>
@@ -752,7 +971,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 <p>图 4 是图 1 和 图 3 边缘对比的细节，可以看到边缘像素的过渡圆滑了很多。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/hHuSMsJ8zZbvrVo.png" width="500"/>
+<img src="/images/20211211/detail.png" width="500"/>
 <br/>
 图 4
 </div>
@@ -943,7 +1162,7 @@ wasm 提供给 web 使用，渲染时把 SkPath 转成 Path2D 或者直接调用
 
 <p> 双线性插值会取临近 4 个像素的加权平均值。</p>
 
-<p><img src="https://s2.loli.net/2021/12/11/hgFatmDMCX15T6d.jpg" width="500" alt="bilinear_filtering.jpg" /></p>
+<p><img src="/images/20210805/bilinear_filtering.jpg" width="500" alt="bilinear_filtering.jpg" /></p>
 
 <p>上面的情况我们在传递的是图片边缘的 UV 坐标，那么由于双线性采样，它就会采到下面绿色的像素；如果我们传递的 UV 坐标收缩 0.5px，那么边缘外面的像素权重会是 0，就采不到绿色。</p>
 
@@ -1931,50 +2150,6 @@ Skia版本：m62<br/>
 
     </article>
   
-  
-    <article>
-      
-  <header>
-    
-      <h1 class="entry-title"><a href="/blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/">iOS&amp;Android 播放透明视频</a></h1>
-    
-    
-      <p class="meta">
-        
-
-
-
-
-<time class='entry-date' datetime='2019-07-08T21:49:54+08:00'><span class='date'><span class='date-month'>Jul</span> <span class='date-day'>8</span><span class='date-suffix'>th</span>, <span class='date-year'>2019</span></span> <span class='time'>9:49 pm</span></time>
-        
-           | <a href="/blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/#disqus_thread"
-             data-disqus-identifier="http://lvpengwei.github.io//blog/2019/07/08/ios-and-android-bo-fang-tou-ming-shi-pin/">Comments</a>
-        
-      </p>
-    
-  </header>
-
-
-  <div class="entry-content"><p>在 iOS &amp; Android 上播放带 alpha 的 mp4 视频，用来代替序列帧动画(png/webp)，素材小，播放也流畅。</p>
-
-<p>用滤镜就可以完成，Demo 地址：<br/>
-<a href="https://github.com/lvpengwei/AlphaVideoiOS">iOS</a><br/>
-<a href="https://github.com/lvpengwei/ExoPlayerFilter">Android</a></p>
-
-<p><a href="https://felgo.com/doc/felgo-alphavideo/#how-to-create-an-alpha-video">如何使用 AE 制作带 alpha 的 mp4</a></p>
-
-<p>原理：因为视频只有 rgb，没有 a，所以制作两个视频，第一个是原视频，第二个是纯黑白的边界视频，然后把两个视频合成一个，目的是保证帧对应。第一个视频的 rgb 是 0~1 的 float 值，第二个视频的 rgb 要么全是 1，要么全是 0。在客户端进行渲染的时候，写一个滤镜，目标像素 rgba 在取值的时候，rgb 使用第一个视频的 rgb，a 使用第二个视频的 r，就可以完成播放透明视频。</p>
-
-<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
-</pre></td><td class='code'><pre><code class=''><span class='line'>gl_FragColor = vec4(color1.rgb, color2.r);</span></code></pre></td></tr></table></div></figure>
-
-</div>
-  
-  
-
-
-    </article>
-  
   <div class="pagination">
     
       <a class="prev" href="/posts/2">&larr; Older</a>
@@ -1990,6 +2165,10 @@ Skia版本：m62<br/>
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2023/04/25/tgfxshi-xian-blend/">Tgfx 实现 Blend</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2023/04/24/pag-qu-diao-skia-hou-ru-he-xuan-ran-path/">PAG 去掉 Skia 后如何渲染 Path</a>
       </li>
     
@@ -2003,10 +2182,6 @@ Skia版本：m62<br/>
     
       <li class="post">
         <a href="/blog/2021/12/11/wen-li-bian-yuan-kang-ju-chi-coverage-aa/">纹理边缘抗锯齿 CoverageAA</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2021/08/05/wen-li-ju-bu-cai-yang/">纹理局部采样</a>
       </li>
     
   </ul>

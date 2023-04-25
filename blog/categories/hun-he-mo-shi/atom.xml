@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: 混合模式 | lvpengwei’s Blog]]></title>
+  <link href="http://lvpengwei.github.io//blog/categories/hun-he-mo-shi/atom.xml" rel="self"/>
+  <link href="http://lvpengwei.github.io//"/>
+  <updated>2023-04-25T22:59:31+08:00</updated>
+  <id>http://lvpengwei.github.io//</id>
+  <author>
+    <name><![CDATA[lvpengwei]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Tgfx 实现 Blend]]></title>
+    <link href="http://lvpengwei.github.io//blog/2023/04/25/tgfxshi-xian-blend/"/>
+    <updated>2023-04-25T22:24:31+08:00</updated>
+    <id>http://lvpengwei.github.io//blog/2023/04/25/tgfxshi-xian-blend</id>
+    <content type="html"><![CDATA[<h2>问题</h2>
+
+<p>PAG 文件里的混合模式是从 AE 中导出的，然后使用 skia 内置的混合模式去实现，去掉 skia 之后，需要用原生的 OpenGL 来实现。</p>
+
+<h2>思路</h2>
+
+<p>既然 skia 内置的混合模式可以满足需求，那我们用 OpenGL 实现 skia 支持的就好，先看一下 skia 里面都有哪些混合模式。
+<code>cpp
+enum class SkBlendMode {  
+  kClear, //!&lt; replaces destination with zero: fully transparent  
+  kSrc, //!&lt; replaces destination  
+  kDst, //!&lt; preserves destination  
+  kSrcOver, //!&lt; source over destination  
+  kDstOver, //!&lt; destination over source  
+  kSrcIn, //!&lt; source trimmed inside destination  
+  kDstIn, //!&lt; destination trimmed by source  
+  kSrcOut, //!&lt; source trimmed outside destination  
+  kDstOut, //!&lt; destination trimmed outside source  
+  kSrcATop, //!&lt; source inside destination blended with destination  
+  kDstATop, //!&lt; destination inside source blended with source  
+  kXor, //!&lt; each of source and destination trimmed outside the other  
+  kPlus, //!&lt; sum of colors  
+  kModulate, //!&lt; product of premultiplied colors; darkens destination  
+  kScreen, //!&lt; multiply inverse of pixels, inverting result; brightens destination  
+  kLastCoeffMode = kScreen, //!&lt; last porter duff blend mode  
+  kOverlay, //!&lt; multiply or screen, depending on destination  
+  kDarken, //!&lt; darker of source and destination  
+  kLighten, //!&lt; lighter of source and destination  
+  kColorDodge, //!&lt; brighten destination to reflect source  
+  kColorBurn, //!&lt; darken destination to reflect source  
+  kHardLight, //!&lt; multiply or screen, depending on source  
+  kSoftLight, //!&lt; lighten or darken, depending on source  
+  kDifference, //!&lt; subtract darker from lighter with higher contrast  
+  kExclusion, //!&lt; subtract darker from lighter with lower contrast  
+  kMultiply, //!&lt; multiply source with destination, darkening image  
+  kLastSeparableMode = kMultiply, //!&lt; last blend mode operating separately on components  
+  kHue, //!&lt; hue of source with saturation and luminosity of destination  
+  kSaturation, //!&lt; saturation of source with hue and luminosity of destination  
+  kColor, //!&lt; hue and saturation of source with luminosity of destination  
+  kLuminosity, //!&lt; luminosity of source with hue and saturation of destination  
+  kLastMode = kLuminosity, //!&lt; last valid value  
+};
+</code>
+<img src="/images/20230425/blend.png" alt="blend mode" /></p>
+
+<p>从实现方案上来说，这些混合模式都可以用 shader 来完成。其中<code>kLastCoeffMode</code>以上的混合模式也叫 <a href="https://zh.wikipedia.org/wiki/Alpha%E5%90%88%E6%88%90">PorterDuff 混合模式</a>，它们还可以用 OpenGL 提供的 <code>glBlendFunc</code>来实现 。</p>
+
+<h2>解决</h2>
+
+<h3>coeff blend mode</h3>
+
+<p><code>kLastCoeffMode</code>以上的比较容易，在渲染之前把对应的参数设置好就行。
+<figure class='code'><figcaption><span></span></figcaption><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+</pre></td><td class='code'><pre><code class='cpp'><span class='line'><span class="k">static</span> <span class="k">constexpr</span> <span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="n">Blend</span><span class="p">,</span> <span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&amp;</span><span class="n">lt</span><span class="p">;</span><span class="kt">unsigned</span><span class="p">,</span> <span class="kt">unsigned</span><span class="o">&gt;&gt;</span> <span class="n">kBlendCoeffMap</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Clear</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Src</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Dst</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_ONE</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcOver</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstOver</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ONE</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcIn</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstIn</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_SRC_ALPHA</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcOut</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ZERO</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstOut</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">SrcATop</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">DstATop</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_SRC_ALPHA</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Xor</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE_MINUS_DST_ALPHA</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_ALPHA</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Plus</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ONE</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Modulate</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ZERO</span><span class="p">,</span> <span class="n">GL_SRC_COLOR</span><span class="p">}},</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'>  <span class="p">{</span><span class="n">Blend</span><span class="o">::</span><span class="n">Screen</span><span class="p">,</span> <span class="p">{</span><span class="n">GL_ONE</span><span class="p">,</span> <span class="n">GL_ONE_MINUS_SRC_COLOR</span><span class="p">}}};</span><span class="o">&lt;/</span><span class="n">p</span><span class="o">&gt;</span>
+</span><span class='line'>
+</span><span class='line'><span class="o">&lt;</span><span class="n">p</span><span class="o">&gt;</span><span class="n">glEnable</span><span class="p">(</span><span class="n">GL_BLEND</span><span class="p">);</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="n">glBlendFunc</span><span class="p">(</span><span class="n">first</span><span class="p">,</span> <span class="n">second</span><span class="p">);</span><span class="o">&lt;</span><span class="n">br</span><span class="o">/&gt;</span>
+</span><span class='line'><span class="n">glBlendEquation</span><span class="p">(</span><span class="n">GL_FUNC_ADD</span><span class="p">);</span>
+</span></code></pre></td></tr></table></div></figure></p>
+
+<h3>shader blend mode</h3>
+
+<p>用 shader 实现混合模式，我们需要在 shader 中访问当前  frame buffer 上的颜色分量，OpenGL 有一些 extension 提供了 frame buffer fetch 的功能，如下表所示。</p>
+
+<table>
+   <tr>
+      <td>extension</td>
+      <td>color name</td>
+   </tr>
+    <tr>
+      <td>GL_EXT_shader_framebuffer_fetch</td>
+      <td>gl_LastFragData[0]</td>
+   </tr>
+   <tr>
+      <td>GL_NV_shader_framebuffer_fetch</td>
+      <td>gl_LastFragData[0]</td>
+   </tr>
+   <tr>
+      <td>GL_ARM_shader_framebuffer_fetch</td>
+      <td>gl_LastFragColorARM</td>
+   </tr>
+</table>
+
+
+<p><br/></p>
+
+<p>如果当前的 OpenGL 没有提供这些 extension，我们还有一个兜底措施，把这个 frame buffer 的内容复制到一个纹理(<code>dstTexture</code>)上，再把纹理传入 shader。</p>
+
+<p><img src="/images/20230425/blend_dst_texture.png" alt="" /></p>
+
+<p>当然我们不需要把完整的 frame buffer 内容复制一份，因为我们的绘制区域可能只是局部。</p>
+
+<p>复制局部 frame buffer 内容到纹理上，我们使用的是<code>glCopyTexSubImage2D</code>。这里还有一些其他的方式，比如<code>glBlitFramebuffer</code>，用这个的话，需要多创建一个 frame buffer，没有前一个方便和高效。</p>
+
+<p>如果当前 frame buffer 已经绑定了一个纹理，而且当前的 OpenGL 也支持 <code>glTextureBarrier</code>，可以直接把这个绑定的纹理传入 shader，不过在绘制之前要调用一下<code>glTextureBarrier</code>。</p>
+
+<h2>shader 公式</h2>
+
+<p>skia 的 shader 公式来源是 <a href="https://www.w3.org/TR/compositing-1/#advancedcompositing">w3c - Advanced compositing features</a> 的文档。</p>
+
+<blockquote><p>注意：公式里的 RGB 是 Premultiplied 还是 Unpremultiplied。</p></blockquote>
+
+<p>D2D 也有一份 <a href="https://docs.microsoft.com/en-us/windows/win32/direct2d/blend">blend</a> 公式。这两份基本是一样的，w3c 的更全一点。</p>
+
+<h2>总结</h2>
+
+<p>实现混合模式的整个过程，主要就是用 shader 实现的那部分比较复杂，因为需要考虑 OpenGL 的兼容性。</p>
+
+<h2>链接</h2>
+
+<p><a href="https://github.com/google/skia">skia</a><br/>
+<a href="https://stackoverflow.com/questions/23981016/best-method-to-copy-texture-to-texture">best method to copy texture to texture</a><br/>
+<a href="https://stackoverflow.com/questions/38534694/opengl-reading-from-a-texture-unit-currently-bound-to-a-framebuffer">OpenGL Reading from a texture unit currently bound to a framebuffer</a><br/>
+<a href="https://skia.org/docs/user/api/skblendmode_overview/">SkBlendMode Overview</a><br/>
+<a href="https://www.w3.org/TR/compositing-1/#advancedcompositing">w3c - Advanced compositing features</a><br/>
+<a href="https://docs.microsoft.com/en-us/windows/win32/direct2d/blend">D2D - blend</a></p>
+]]></content>
+  </entry>
+  
+</feed>

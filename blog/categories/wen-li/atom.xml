@@ -4,7 +4,7 @@
   <title><![CDATA[Category: 纹理 | lvpengwei’s Blog]]></title>
   <link href="http://lvpengwei.github.io//blog/categories/wen-li/atom.xml" rel="self"/>
   <link href="http://lvpengwei.github.io//"/>
-  <updated>2023-04-24T21:45:11+08:00</updated>
+  <updated>2023-04-25T22:59:31+08:00</updated>
   <id>http://lvpengwei.github.io//</id>
   <author>
     <name><![CDATA[lvpengwei]]></name>
@@ -25,7 +25,7 @@
 <p>图 1 是没有做抗锯齿的时候，可以明显看到边缘的锯齿。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/QsFLYTfqxGlEWBv.png" width="500"/>
+<img src="http://lvpengwei.github.io//images/20211211/aa_pag_none.png" width="500"/>
 <br/>
 图 1
 </div>
@@ -38,7 +38,7 @@
 <p>如图 2 所示，矩形 abcd 是我们要绘制的区域，根据矩形的坐标向内缩 0.5px 得到矩形 P0_P1_P3_P2，向外扩 0.5px 得到矩形 P4_P5_P7_P6。内矩形里面 alpha 都是 1，外矩形边缘 alpha 都是 0，内矩形和外矩形之间 alpha 从 1->0 渐变。这样我们就对边缘做了一个逐渐消失的效果，从视觉上看，边缘的锯齿就没那么明显了。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/05/KtvNZQPdw8SLHTq.png" width="500"/>
+<img src="http://lvpengwei.github.io//images/20211211/CoverageAA _1_.png" width="500"/>
 <br/>
 图 2
 </div>
@@ -144,7 +144,7 @@ gl-&gt;drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 <p>图 3 是做完抗锯齿的效果，可以看到边缘的锯齿已经没有了。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/gquEYZ2hc1JM57H.png" width="500"/>
+<img src="http://lvpengwei.github.io//images/20211211/aa_pag.png" width="500"/>
 <br/>
 图 3
 </div>
@@ -153,7 +153,7 @@ gl-&gt;drawArrays(GL_TRIANGLE_STRIP, 0, 4);
 <p>图 4 是图 1 和 图 3 边缘对比的细节，可以看到边缘像素的过渡圆滑了很多。</p>
 
 <div align=center>
-<img src="https://s2.loli.net/2021/12/11/hHuSMsJ8zZbvrVo.png" width="500"/>
+<img src="http://lvpengwei.github.io//images/20211211/detail.png" width="500"/>
 <br/>
 图 4
 </div>
@@ -264,7 +264,7 @@ void SurfaceTexture::computeTransformMatrix(float outTransform[16], const sp&lt;
 
 <p> 双线性插值会取临近 4 个像素的加权平均值。</p>
 
-<p><img src="https://s2.loli.net/2021/12/11/hgFatmDMCX15T6d.jpg" width="500" alt="bilinear_filtering.jpg" /></p>
+<p><img src="/images/20210805/bilinear_filtering.jpg" width="500" alt="bilinear_filtering.jpg" /></p>
 
 <p>上面的情况我们在传递的是图片边缘的 UV 坐标，那么由于双线性采样，它就会采到下面绿色的像素；如果我们传递的 UV 坐标收缩 0.5px，那么边缘外面的像素权重会是 0，就采不到绿色。</p>
 

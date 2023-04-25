@@ -117,7 +117,7 @@
 
 <p>把圆角矩形分成 9 份，分别是 4 个角（p0p1p5p4、p2p3p7p6、p8p9p13p12、p10p11p15p14），4 个边缘（p1p2p6p5、p4p5p9p8、p6p7p11p10、p9p10p14p13）和 1 个中心（p5p6p10p11）。角的部分画弧，边缘和中心画矩形。</p>
 
-<p><img src="https://s2.loli.net/2021/12/19/1FLUrImOh2WvbVE.png" alt="圆角矩形.png" /></p>
+<p><img src="/images/20230413/round_rect.png" alt="圆角矩形.png" /></p>
 
 <p>顶点的定义除了常规的屏幕坐标，再提供一个小矩形的坐标，小矩形坐标的作用是计算点到图形轮廓的距离。</p>
 
@@ -131,7 +131,7 @@
 
 <p>如果是圆弧的时候，上面的实现没问题，抗锯齿也完成的很好；但是如果是椭圆弧的时候，上面的实现就会出现下面的现象。比如按照比例缩小椭圆 80%，短半径从 5 到 4，长半径从 10 到 8，就是那个实线-内椭圆，和实线-外椭圆相比，它们之间的距离不是均匀的，而我们想要的是距离均匀的椭圆，也就是虚线的椭圆。</p>
 
-<p><img src="https://s2.loli.net/2021/12/24/7IRbwmJlt9TL8BD.png" alt="圆等距线拉伸成椭圆.png" /></p>
+<p><img src="/images/20230413/stretch_into_ellipse.png" alt="圆等距线拉伸成椭圆.png" /></p>
 
 <p>所以上面的公式不适合用在椭圆上。</p>
 
@@ -275,6 +275,10 @@
   <ul id="recent_posts">
     
       <li class="post">
+        <a href="/blog/2023/04/25/tgfxshi-xian-blend/">Tgfx 实现 Blend</a>
+      </li>
+    
+      <li class="post">
         <a href="/blog/2023/04/24/pag-qu-diao-skia-hou-ru-he-xuan-ran-path/">PAG 去掉 Skia 后如何渲染 Path</a>
       </li>
     
@@ -288,10 +292,6 @@
     
       <li class="post">
         <a href="/blog/2021/12/11/wen-li-bian-yuan-kang-ju-chi-coverage-aa/">纹理边缘抗锯齿 CoverageAA</a>
-      </li>
-    
-      <li class="post">
-        <a href="/blog/2021/08/05/wen-li-ju-bu-cai-yang/">纹理局部采样</a>
       </li>
     
   </ul>
